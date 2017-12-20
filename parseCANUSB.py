@@ -1,115 +1,121 @@
 from prettytable import PrettyTable
 import argparse
+import constants
 
 def splitAt(w,n):
-    for i in range(0,len(w),n):
-        yield w[i:i+n]
+	list = []
+	for i in range(0,len(w),n):
+		list.append(w[i:i+n])
+	return list
 
+def cutFromLine(line, n):
+	if not n: return '', line
+	return line[:n], line[n:]
+
+def getHeaderLen(headerType):
+	CANHeaderIDE = {
+		't': 'STANDARD',
+		'T': 'EXTENDED',
+	}
+	
+	if headerType not in CANHeaderIDE: return
+	
+	IDE = CANHeaderIDE[headerType]
+	if   IDE == 'STANDARD': return 4
+	elif IDE == 'EXTENDED': return 8
+
+def prepareTable():
+	t = PrettyTable([	'T',
+						'dT',
+						'Header',
+						'Flag',
+						'Func',
+						'ID',
+						'Type',
+						'Body',
+						'Parsed header',
+						'Parsed body'
+					])
+	t.align = 'r'
+	t.align['Body'] = 'l'
+	return t
+
+def parseCANUSBLine(line):
+	headerType, line = cutFromLine(line, 1)
+	headerLen = getHeaderLen(headerType)
+	if headerLen != 8: return None, None, None
+	
+	header, line = cutFromLine(line, headerLen)
+	header = splitAt(header, 2)
+	
+	bodySize, line = cutFromLine(line, 1)
+	bodySize = int(bodySize, 16)
+	body, line = cutFromLine(line, bodySize * 2)
+	body = splitAt(body, 2)
+	timestamp, line = cutFromLine(line, 4)
+	
+	return header, body, int(timestamp, 16)
+
+def parseHeader(header):
+	if len(header) != 4: return None, None, None, None
+
+	flag    = header[0][0]
+	reserve = header[0][1]
+	function= header[1]
+	id      = header[2]
+	type    = header[3]
+
+	return (
+		int(flag, 16),
+		int(function, 16),
+		int(id  , 16),
+		int(type, 16)
+	)
+	
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Parse file name')
 	parser.add_argument('File', metavar='MyFile', nargs='+',
-                    help='file with CAN log')
-					
+					help='file with CAN log')
+	
 	arg = parser.parse_args()
 	FileToParse = arg.File[0]
 	
-	Input = open(FileToParse, 'r')
-	content = Input.readlines()
+	with open(FileToParse, 'r') as Input: content = Input.readlines()
 	
-	Output = open('Output.txt', 'w')
-	
-	
-	ProgramType = {
-	 0: 'CAN_PROGRAM_TYPE_UNDEFINED',
-	 1: 'PROGRAM',
-	 2: 'OUTDOOR_SENSOR',
-	 3: 'CONSUMER',
-	 4: 'CASCADE_MANAGER',
-	 5: 'ROOM_DEVICE',
-	 6: 'TEMPERATURE_SOURCE',
-	 7: 'HEAT_ACCUMULATOR',
-	 8: 'EXTENDED_CONTROLLER',
-	 9: 'EXTENSION_CONTROLLER',
-	10: 'MONITORING_DEVICE',
-	11: 'CONTROLLER',
-	12: 'CIRCUIT',
-	13: 'SCHEDULE',
-	14: 'HEATING_CIRCUIT',
-	15: 'DIRECT_CIRCUIT',
-	16: 'DHW',
-	17: 'FLOW_THROUGH_DHW',
-	18: 'TEMPERATURE_GENERATOR',
-	19: 'POOL',
-	20: 'THERMOSTAT',
-	21: 'SNOWMELT',
-	22: 'REMOTE_CONTROL',
-	23: 'BOILER',
-	24: 'CHILLER',
-	25: 'SOLAR_COLLECTOR',
-	26: 'VENTILATION',
-	27: 'GENERIC_RELAY',
-	28: 'ALARM',
-	29: 'FILLING_LOOP',
-    
-	0x80 : 'DATALOGGER_MONITOR',
-	0x81 : 'EVENT',
-	0x82 : 'FWC_CASCADE',
-	0x83 : 'DATALOGGER_NAMEDSENSORS',
-	0x84 : 'HCC',
-	0x85 : 'DL_CONFIGMENU_DATALOGGER',
-	0x86 : 'DL_CONFIGMENU_CONTROLLER',
-	0x87 : 'CLOCKSYNC'
-	}
-
-	t = PrettyTable(['T', 'dT', 'Header', 'Flag', 'Func', 'ID', 'Type', 'Body'])
-	t.align = 'r'
-	t.align['Body'] = 'l'
+	t = prepareTable()
 	
 	oldTimestamp = 0
 	
 	for line in content:
-		if line[0] == 't':
-			headerSize = 2
-		elif line[0] == 'T':
-			headerSize = 4
-		else: continue
-			
-		headerPos = 1
-		headerLen = headerSize * 2
+		header, body, timestamp = parseCANUSBLine(line)
+		if not header: continue
 		
-		header = line[headerPos : headerPos + headerLen]
+		(	headerFlag,
+			headerFunction,
+			headerID,
+			headerType
+		) = parseHeader(header)
 		
-		headerType = ProgramType[int(header[-2:],16)]
-		headerID = int(header[-4:-2],16)
-		headerFunction = int(header[-6:-4],16)
-		#flag = 'RESP' if int(header[0]) else 'RQST'
-		flag = header[0] #better to watch
+		if headerFlag == None: continue
 		
-		bodySizePos = headerPos + headerLen
-		bodySizeLen = 1
-		
-		bodySize = line[bodySizePos : bodySizePos + bodySizeLen]
-		
-		bodyPos = bodySizePos + bodySizeLen
-		bodyLen = int(bodySize) * 2
-		
-		body = line[bodyPos : bodyPos + bodyLen]
-		tmp = " ".join(splitAt(body,2))
-		body = tmp
-		
-		tmp = " ".join(splitAt(header,2))
-		header = tmp
-		
-		timestamp = int(line[-5:-1], 16)
+		headerStr = ' '.join(header)
+		bodyStr   = ' '.join(body)
 		
 		delta = timestamp - oldTimestamp
-		
-		t.add_row([timestamp, delta, header, flag, headerFunction, headerID, headerType, body])
-
 		oldTimestamp = timestamp
 		
-	Output.write(t.get_string())
-	Input.close()
-	Output.close()
+		t.add_row([	timestamp,
+					delta,
+					headerStr,
+					headerFlag,
+					headerFunction,
+					headerID,
+					headerType,
+					bodyStr,
+					'TODO',
+					'TODO'
+				])
+	
+	with open('Output.txt', 'w') as Output: Output.write(t.get_string())
 	
 	print 'Done'
