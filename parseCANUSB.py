@@ -1,6 +1,10 @@
 from prettytable import PrettyTable
 import argparse
 
+def splitAt(w,n):
+    for i in range(0,len(w),n):
+        yield w[i:i+n]
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Parse file name')
 	parser.add_argument('File', metavar='MyFile', nargs='+',
@@ -78,8 +82,8 @@ if __name__ == "__main__":
 		headerType = ProgramType[int(header[-2:],16)]
 		headerID = int(header[-4:-2],16)
 		headerFunction = int(header[-6:-4],16)
-		flag = 'RESP' if int(header[0]) else 'RQST'
-		
+		#flag = 'RESP' if int(header[0]) else 'RQST'
+		flag = header[0] #better to watch
 		
 		bodySizePos = headerPos + headerLen
 		bodySizeLen = 1
@@ -90,6 +94,11 @@ if __name__ == "__main__":
 		bodyLen = int(bodySize) * 2
 		
 		body = line[bodyPos : bodyPos + bodyLen]
+		tmp = " ".join(splitAt(body,2))
+		body = tmp
+		
+		tmp = " ".join(splitAt(header,2))
+		header = tmp
 		
 		timestamp = int(line[-5:-1], 16)
 		
