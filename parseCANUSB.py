@@ -157,6 +157,25 @@ def getKseModuleName(module):
 		0x0D: 'CoCo'     ,
     }.get(module, 'None')    # 5 is default if module not found
 	
+def getKseFuntionName(body):
+	functionCodeSize = 3 if body[2] == 'FA' else 1
+	if functionCodeSize == 1:
+		if body[2] == '0E': return 'DHW Temperature'
+		
+	return 'Undefined'
+	
+def getKseBodyDescription(body):
+	destModule  = int(body[0][0], 16)
+	messageType = int(body[0][1], 16)
+	destModuleId = body[1]
+	functionName = getKseFuntionName(body)
+	
+	toModule = getKseModuleName(destModule)
+	messageTypeStr = 'request' if messageType == 1 else 'response'
+	return ('to ' + toModule + ' (' + destModuleId + ') ' +
+		messageTypeStr + ' ' +
+		functionName)
+	
 	
 def parseKseProtocol(content):
 	t = prepareKseTable()
@@ -173,6 +192,7 @@ def parseKseProtocol(content):
 		oldTimestamp = timestamp
 		
 		parsedHeader = getKseModuleName(module)
+		parsedBody   = getKseBodyDescription(body)
 		
 		t.add_row([	timestamp,
 					delta,
@@ -181,7 +201,7 @@ def parseKseProtocol(content):
 					busId,
 					bodyStr,
 					parsedHeader,
-					'TODO'
+					parsedBody
 				])
 	
 	with open('Output.txt', 'w') as Output: Output.write(t.get_string())
