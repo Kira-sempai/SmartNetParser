@@ -1,6 +1,9 @@
 from prettytable import PrettyTable
 import argparse
 import constants
+from test.test_funcattrs import FunctionDictsTest
+from compiler.ast import Const
+from email.base64mime import body_decode
 
 def splitAt(w,n):
 	list = []
@@ -71,6 +74,82 @@ def parseSmartNetHeader(header):
 		int(id  , 16),
 		int(type, 16)
 	)
+
+	
+class Program(object):
+	def __init__(self, id, type):
+		self.id   = id
+		self.type = type
+		
+		if (self.type in constants.ProgramType) and (constants.ProgramType[self.type] in constants.Function):
+			self.functionDict = constants.Function[constants.ProgramType[self.type]]
+		else:
+			self.functionDict = None	
+		
+	
+	def getProgramTypeName(self):
+		if self.type in constants.ProgramType:
+			return constants.ProgramType[self.type]
+		
+		return 'UNK_Type'
+		
+	def getFunctionName(self, functionId):
+		if self.functionDict and (functionId in self.functionDict):
+			return self.functionDict[functionId]
+		
+		return 'UNK_Func'
+
+
+def getSmartNetHeaderDescription(id, programTypeId, functionId, flag):
+	prg = Program(id, programTypeId)
+	
+	programTypeName = prg.getProgramTypeName()
+	functionName    = prg.getFunctionName(functionId)
+	flagName        = constants.smartNetHeaderFlag[flag]
+	
+	return '{}({:3})->{} {:8}'.format(programTypeName, id, functionName, flagName)
+
+
+def smartNetControllerGetOutputValueBodyDescription(flag, body):
+	host = int(body[0], 16)
+	
+	channelIdAndType = int(body[1], 16)
+	
+	channelId = channelIdAndType & 0x1F
+	channelType = channelIdAndType >> 5
+	
+	
+	typeDict = {
+		0: 'CHANNEL_SENSOR_LOCAL',
+		1: 'CHANNEL_RELAY_LOCAL',
+		2: 'CHANNEL_SENSOR',
+		3: 'CHANNEL_RELAY',
+		4: 'CHANNEL_INPUT',
+		5: 'CHANNEL_OUTPUT',
+#		6: 'CHANNEL_RESERVED',
+		7: 'CHANNEL_UNDEFINED',
+	}
+	
+	channelTypeName = typeDict[channelType]
+	
+	if flag == 0:
+		return ''
+	
+	if channelType == 5:
+		value = int(body[2], 16)
+	elif channelType == 2:
+		value = int('{}{}'.format(body[3], body[2]), 16)/10.0
+	else:
+		value = ''
+	
+	return 'host={:2} channelId={:2} type={:14} value={:5}'.format(host, channelId, channelTypeName, value)
+
+def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
+	if (headerType == 11) and (headerFunction == 19):
+		return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
+		
+	return ''
+	
 	
 def parseSmartNetProtocol(content):
 	t = prepareSmartNetTable()
@@ -94,6 +173,9 @@ def parseSmartNetProtocol(content):
 		delta = timestamp - oldTimestamp
 		oldTimestamp = timestamp
 		
+		headerDescription = getSmartNetHeaderDescription(headerID, headerType, headerFunction, headerFlag)
+		bodyDescription   = getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body)
+		
 		t.add_row([	timestamp,
 					delta,
 					headerStr,
@@ -102,8 +184,8 @@ def parseSmartNetProtocol(content):
 					headerID,
 					headerType,
 					bodyStr,
-					'TODO',
-					'TODO'
+					headerDescription,
+					bodyDescription
 				])
 	with open('Output.txt', 'w') as Output: Output.write(t.get_string())
 	
@@ -217,7 +299,7 @@ if __name__ == "__main__":
 	
 	with open(FileToParse, 'r') as Input: content = Input.readlines()
 	
-	if False:
+	if True:
 		parseSmartNetProtocol(content)
 	else:
 		parseKseProtocol(content)
