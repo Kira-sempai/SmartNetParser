@@ -4,6 +4,11 @@ CANHeaderIDE = {
 	'T': 'EXTENDED',
 }
 
+smartNetHeaderFlag = {
+	0: 'Request',
+	1: 'Response',
+}
+
 ProgramType = {
 	 0: 'CAN_PROGRAM_TYPE_UNDEFINED',
 	 1: 'PROGRAM',
@@ -45,3 +50,73 @@ ProgramType = {
 	0x86 : 'DL_CONFIGMENU_CONTROLLER',
 	0x87 : 'CLOCKSYNC'
 }
+
+ControllerFunction = {
+	 1: 'I_AM_HERE',
+	 2: 'GET_CONTROLLER',
+	 3: 'GET_ACTIVE_PROGRAMS_LIST',
+	 4: 'ADD_NEW_PROGRAM',
+	 5: 'REMOVE_PROGRAM',
+	 6: 'GET_SYSTEM_DATE_TIME',
+	 7: 'SET_SYSTEM_DATE_TIME',
+	 8: 'GET_CONTROLLER_TYPE',
+	 9: 'GET_PROGRAM_VERSION',
+	10: 'GET_CHANNEL_NUMBER',
+	11: 'GET_OUTPUT_TYPE',
+	12: 'GET_INPUT_TYPE',
+	13: 'GET_CHANNEL_BINDING',
+	14: 'GET_INPUT_VALUE',
+	15: 'SET_OUTPUT_VALUE',
+	16: 'HAS_ERROR',
+	17: 'GET_CONTROLLER_MASKS',
+	18: 'GET_CHANNELS_INFO',
+	19: 'GET_OUTPUT_VALUE',
+	20: 'TIME_MASTER_IS_ACTIVE',
+
+	21 : 'JOURNAL',
+
+	22 : 'GET_VARIABLE',
+	23 : 'SET_VARIABLE',
+
+	24 : 'GET_RELAY_MAPPING',
+	25 : 'SET_RELAY_MAPPING',
+
+	26 : 'RESET_TO_DEFAULTS',
+	27 : 'RESET_PROGRAMS',
+}
+
+RemoteControlFunction = {
+	 1: 'GET_PARAMETER_VALUE',
+	 2: 'SET_PARAMETER_VALUE',
+	 3: 'GET_PARAMETER_NAME',
+	 4: 'GET_PARAMETER_DESCRIPTION',
+	 5: 'GET_PARAMETER_MINIMUM_VALUE',
+	 6: 'GET_PARAMETER_MAXIMUM_VALUE',
+	 7: 'GET_PARAMETER_DEFAULT_VALUE',
+	 8: 'GET_PARAMETER_UNIT',
+}
+
+TemperatureSourceFunction = {
+	0: 'REQUEST_TEMPERATURE',
+	1: 'GET_TEMPERATURE',
+	2: 'GET_PROPERTIES',
+	3: 'REQUEST_POWER',
+	4: 'GET_CURRENT_POWER',
+	5: 'GET_WORK_TIME',
+}
+
+ConsumerFunction = {
+	1: 'GIVE_WAY',
+	2: 'PROCEED',
+	3: 'SET_COOLING',
+	4: 'SET_WARM_UP',
+	5: 'GET_REQUESTED_TEMPERATURE',
+}
+
+Function = {
+	'CONSUMER'           : ConsumerFunction,
+	'TEMPERATURE_SOURCE' : TemperatureSourceFunction,
+	'CONTROLLER'         : ControllerFunction,
+	'REMOTE_CONTROL'     : RemoteControlFunction,
+}
+
