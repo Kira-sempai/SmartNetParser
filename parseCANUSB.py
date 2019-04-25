@@ -1,6 +1,7 @@
 from prettytable import PrettyTable
 import argparse
 import constants
+import datetime
 from test.test_funcattrs import FunctionDictsTest
 from compiler.ast import Const
 from email.base64mime import body_decode
@@ -144,10 +145,40 @@ def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	
 	return 'host={:2} channelId={:2} type={:14} value={:5}'.format(host, channelId, channelTypeName, value)
 
+def smartNetControllerJournalBodyDescription(flag, body):
+	if (flag == 0):
+		return ''
+	
+	operationsDict = {
+		0 : 'OP_STATUS'  ,
+		1 : 'OP_MESSAGE1',
+		2 : 'OP_MESSAGE2',
+		3 : 'OP_MESSAGE3',
+	}
+	
+	numAndOperation = int(body[0], 16)
+	num       = numAndOperation & 0x1F
+	operation = numAndOperation >> 5
+	
+	if operation == 0:
+		crc16 = int('{}{}'.format(body[2], body[1]), 16)
+		timestamp = int('{}{}{}{}'.format(body[6], body[5], body[4], body[3]), 16)
+		messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
+	else:
+		severity = int(body[1], 16)
+		crc16 = int('{}{}'.format(body[3], body[2]), 16)
+		timestamp = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
+		messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
+	
+	return ''
+
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 	if (headerType == 11) and (headerFunction == 19):
 		return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
 		
+	if (headerType == 11) and (headerFunction == 21):
+		return smartNetControllerJournalBodyDescription(headerFlag, body)
+	
 	return ''
 	
 	
