@@ -139,7 +139,7 @@ def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	if channelType == 5:
 		value = int(body[2], 16)
 	elif channelType == 2:
-		value = int('{}{}'.format(body[3], body[2]), 16)/10.0
+		value = int('{}{}'.format(body[2], body[3]), 16)/10.0
 	else:
 		value = ''
 	
