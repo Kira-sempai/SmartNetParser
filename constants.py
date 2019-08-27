@@ -83,6 +83,11 @@ ControllerFunction = {
 
 	26 : 'RESET_TO_DEFAULTS',
 	27 : 'RESET_PROGRAMS',
+	
+	
+	40 : 'INIT_LOG_TRANSMIT',
+	41 : 'GET_LOG_PART',
+	42 : 'MARK_JOURNAL_MESSAGES_AS_READ',
 }
 
 RemoteControlFunction = {
