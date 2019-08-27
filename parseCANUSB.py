@@ -17,16 +17,10 @@ def cutFromLine(line, n):
 	return line[:n], line[n:]
 
 def getHeaderLen(headerType):
-	CANHeaderIDE = {
-		't': 'STANDARD',
-		'T': 'EXTENDED',
-	}
+	if headerType.islower():
+		return 3
 	
-	if headerType not in CANHeaderIDE: return
-	
-	IDE = CANHeaderIDE[headerType]
-	if   IDE == 'STANDARD': return 3
-	elif IDE == 'EXTENDED': return 8
+	return 8
 
 def prepareSmartNetTable():
 	t = PrettyTable([	'T',
@@ -42,6 +36,7 @@ def prepareSmartNetTable():
 					])
 	t.align = 'r'
 	t.align['Body'] = 'l'
+	t.align['Parsed body'] = 'l'
 	return t
 
 def parseSmartNetCANUSBLine(line):
@@ -172,12 +167,65 @@ def smartNetControllerJournalBodyDescription(flag, body):
 	
 	return ''
 
+def smartNetControllerInitLogTransmitDescription(flag, body):
+	startTime = int('{}{}{}{}'.format(body[3], body[2], body[1], body[0]), 16)
+	endTime   = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
+	
+	startTime = datetime.datetime.utcfromtimestamp(startTime)
+	endTime   = datetime.datetime.utcfromtimestamp(endTime)
+	
+	return 'From:{} To:{}'.format(startTime, endTime)
+	
+def smartNetControllerGetLogPartDescription(flag, body):
+	chunkId         = int('{}'.format(body[0]), 16)
+	chunkControlInt = int('{}'.format(body[1]), 16)
+	
+	control = {
+	 0xFA: 'CHUNK_PARTS_MAX_NUM',
+	 0xFB: 'GET_SIZE',
+	 0xFC: 'START_TRANSMIT',
+	 0xFD: 'END_TRANSMIT',
+	 0xFE: 'CHUNK_NOT_EXIST',
+	 0xFF: 'GET_CRC',
+	}
+	
+	chunkControlStr = control[chunkControlInt] 
+	
+	bodyStartStr = (str(chunkId) + '.' + chunkControlStr)
+	
+	if constants.smartNetHeaderFlag[flag] == 'Request':
+		return (bodyStartStr + '!')
+	
+	dataSize = 6
+	
+	if chunkControlStr == 'CHUNK_PARTS_MAX_NUM' : dataSize = 2
+	if chunkControlStr == 'GET_SIZE'            : dataSize = 2
+	if chunkControlStr == 'START_TRANSMIT'      : dataSize = 0
+	if chunkControlStr == 'END_TRANSMIT'        : dataSize = 0
+	if chunkControlStr == 'CHUNK_NOT_EXIST'     : dataSize = 0
+	if chunkControlStr == 'GET_CRC'             : dataSize = 2
+	
+
+	if dataSize > 0:
+		data = []
+		for i in range(2, 2 + dataSize):
+			data.append(body[i])
+			
+		dataStr = ' '.join(data)
+		bodyStr = (': ' + dataStr)
+	else:
+		bodyStr = '.'
+	
+	return (bodyStartStr + bodyStr)
+	
+	
+	
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
-	if (headerType == 11) and (headerFunction == 19):
-		return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
-		
-	if (headerType == 11) and (headerFunction == 21):
-		return smartNetControllerJournalBodyDescription(headerFlag, body)
+	if constants.ProgramType[headerType] == 'CONTROLLER':
+		if constants.ControllerFunction[headerFunction] == 'GET_OUTPUT_VALUE' : return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
+		if constants.ControllerFunction[headerFunction] == 'JOURNAL'          : return smartNetControllerJournalBodyDescription(headerFlag, body)
+		if constants.ControllerFunction[headerFunction] == 'INIT_LOG_TRANSMIT': return smartNetControllerInitLogTransmitDescription(headerFlag, body)
+		if constants.ControllerFunction[headerFunction] == 'GET_LOG_PART'     : return smartNetControllerGetLogPartDescription(headerFlag, body)
 	
 	return ''
 	
@@ -337,3 +385,5 @@ if __name__ == "__main__":
 	
 	
 	print 'Done'
+	
+	
