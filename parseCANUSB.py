@@ -189,7 +189,10 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	 0xFF: 'GET_CRC',
 	}
 	
-	chunkControlStr = control[chunkControlInt] 
+	if control.has_key(chunkControlInt):
+		chunkControlStr = control[chunkControlInt]
+	else:
+		chunkControlStr = str(chunkControlInt)
 	
 	bodyStartStr = (str(chunkId) + '.' + chunkControlStr)
 	
@@ -207,9 +210,7 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	
 
 	if dataSize > 0:
-		data = []
-		for i in range(2, 2 + dataSize):
-			data.append(body[i])
+		data = body[2:]
 			
 		dataStr = ' '.join(data)
 		bodyStr = (': ' + dataStr)
