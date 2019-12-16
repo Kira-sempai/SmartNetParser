@@ -152,6 +152,9 @@ def smartNetControllerJournalBodyDescription(flag, body):
 	if (flag == 0):
 		return ''
 	
+	if len(body) < 7:
+		return ''
+			
 	operationsDict = {
 		0 : 'OP_STATUS'  ,
 		1 : 'OP_MESSAGE1',
