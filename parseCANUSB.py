@@ -394,7 +394,7 @@ if __name__ == "__main__":
 	
 	pre, ext = os.path.splitext(FileToParse)
 	
-	OutputFile = pre + '_out.' + ext
+	OutputFile = pre + '_out' + ext
 	
 	with open(FileToParse, 'r') as Input: content = Input.readlines()
 	
