@@ -2,6 +2,7 @@ from prettytable import PrettyTable
 import argparse
 import constants
 import datetime
+import os
 from test.test_funcattrs import FunctionDictsTest
 from compiler.ast import Const
 from email.base64mime import body_decode
@@ -16,8 +17,8 @@ def cutFromLine(line, n):
 	if not n: return '', line
 	return line[:n], line[n:]
 
-def getHeaderLen(headerType):
-	if headerType.islower():
+def getHeaderLen(messageType):
+	if messageType.islower():
 		return 3
 	
 	return 8
@@ -25,6 +26,7 @@ def getHeaderLen(headerType):
 def prepareSmartNetTable():
 	t = PrettyTable([	'T',
 						'dT',
+						'MT',
 						'Header',
 						'Flag',
 						'Func',
@@ -40,9 +42,9 @@ def prepareSmartNetTable():
 	return t
 
 def parseSmartNetCANUSBLine(line):
-	headerType, line = cutFromLine(line, 1)
-	headerLen = getHeaderLen(headerType)
-	if headerLen != 8: return None, None, None
+	messageType, line = cutFromLine(line, 1)
+	headerLen = getHeaderLen(messageType)
+	if headerLen != 8: return messageType, None, None, None
 	
 	header, line = cutFromLine(line, headerLen)
 	header = splitAt(header, 2)
@@ -53,7 +55,7 @@ def parseSmartNetCANUSBLine(line):
 	body = splitAt(body, 2)
 	timestamp, line = cutFromLine(line, 4)
 	
-	return header, body, int(timestamp, 16)
+	return messageType, header, body, int(timestamp, 16)
 
 def parseSmartNetHeader(header):
 	if len(header) != 4: return None, None, None, None
@@ -222,6 +224,9 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	
 	
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
+	if not constants.ProgramType.has_key(headerType):
+		return ''
+
 	if constants.ProgramType[headerType] == 'CONTROLLER':
 		if constants.ControllerFunction[headerFunction] == 'GET_OUTPUT_VALUE' : return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
 		if constants.ControllerFunction[headerFunction] == 'JOURNAL'          : return smartNetControllerJournalBodyDescription(headerFlag, body)
@@ -231,12 +236,12 @@ def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 	return ''
 	
 	
-def parseSmartNetProtocol(content):
+def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
 
 	oldTimestamp = 0
 	for line in content:
-		header, body, timestamp = parseSmartNetCANUSBLine(line)
+		messageType, header, body, timestamp = parseSmartNetCANUSBLine(line)
 		if not header: continue
 		
 		(	headerFlag,
@@ -258,6 +263,7 @@ def parseSmartNetProtocol(content):
 		
 		t.add_row([	timestamp,
 					delta,
+					messageType,
 					headerStr,
 					headerFlag,
 					headerFunction,
@@ -267,12 +273,14 @@ def parseSmartNetProtocol(content):
 					headerDescription,
 					bodyDescription
 				])
-	with open('Output.txt', 'w') as Output: Output.write(t.get_string())
+	
+	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 	
 	
 def prepareKseTable():
 	t = PrettyTable([	'T',
 						'dT',
+						'MT',
 						'Header',
 						'module',
 						'busId',
@@ -285,10 +293,10 @@ def prepareKseTable():
 	return t
 	
 def parseKseCANUSBLine(line):
-	headerType, line = cutFromLine(line, 1)
-	headerLen = getHeaderLen(headerType)
+	messageType, line = cutFromLine(line, 1)
+	headerLen = getHeaderLen(messageType)
 	
-	if headerLen != 3: return None, None, None
+	if headerLen != 3: return messageType, None, None, None
 	
 	header, line = cutFromLine(line, headerLen)
 	
@@ -298,7 +306,7 @@ def parseKseCANUSBLine(line):
 	body = splitAt(body, 2)
 	timestamp, line = cutFromLine(line, 4)
 	
-	return header, body, int(timestamp, 16)
+	return messageType, header, body, int(timestamp, 16)
 
 	
 def parseKseHeader(header):
@@ -339,11 +347,11 @@ def getKseBodyDescription(body):
 		functionName)
 	
 	
-def parseKseProtocol(content):
+def parseKseProtocol(content, outputFile):
 	t = prepareKseTable()
 	oldTimestamp = 0
 	for line in content:
-		header, body, timestamp = parseKseCANUSBLine(line)
+		messageType, header, body, timestamp = parseKseCANUSBLine(line)
 		if not header: continue
 		
 		module, busId = parseKseHeader(header)
@@ -358,6 +366,7 @@ def parseKseProtocol(content):
 		
 		t.add_row([	timestamp,
 					delta,
+					messageType,
 					header,
 					format(module, '#04x'),
 					busId,
@@ -366,7 +375,7 @@ def parseKseProtocol(content):
 					parsedBody
 				])
 	
-	with open('Output.txt', 'w') as Output: Output.write(t.get_string())
+	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 
 
 if __name__ == "__main__":
@@ -377,12 +386,16 @@ if __name__ == "__main__":
 	arg = parser.parse_args()
 	FileToParse = arg.File[0]
 	
+	pre, ext = os.path.splitext(FileToParse)
+	
+	OutputFile = pre + '_out.' + ext
+	
 	with open(FileToParse, 'r') as Input: content = Input.readlines()
 	
 	if True:
-		parseSmartNetProtocol(content)
+		parseSmartNetProtocol(content, OutputFile)
 	else:
-		parseKseProtocol(content)
+		parseKseProtocol(content, OutputFile)
 	
 	
 	print 'Done'
