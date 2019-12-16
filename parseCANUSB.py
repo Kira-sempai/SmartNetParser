@@ -15,6 +15,9 @@ def splitAt(w,n):
 
 def cutFromLine(line, n):
 	if not n: return '', line
+	
+	if len(line) < n: return '', line
+	
 	return line[:n], line[n:]
 
 def getHeaderLen(messageType):
@@ -54,6 +57,9 @@ def parseSmartNetCANUSBLine(line):
 	body, line = cutFromLine(line, bodySize * 2)
 	body = splitAt(body, 2)
 	timestamp, line = cutFromLine(line, 4)
+	
+	if len(timestamp) == 0:
+		timestamp = '0000'
 	
 	return messageType, header, body, int(timestamp, 16)
 
