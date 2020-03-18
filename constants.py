@@ -65,6 +65,45 @@ ProgramType = {
 }
 
 
+RoomDeviceParameter = {
+	 1: 'ROOM_COMFORT_TEMPERATURE',
+	 2: 'ROOM_REDUCED_TEMPERATURE',
+	 3: 'ROOM_HYSTERESIS',
+	 4: 'RELAY_PERIOD',
+	 5: 'RESPONSIBLE_CIRCUIT_1',
+	 6: 'RESPONSIBLE_CIRCUIT_2',
+	 7: 'RESPONSIBLE_CIRCUIT_3',
+	 8: 'WORK_MODE',
+	 9: 'ROOM_DEVICE_VALVE_STATE',
+	10: 'MINIMUM_FLOOR_TEMPERATURE',
+	11: 'MAXIMUM_FLOOR_TEMPERATURE',
+	12: 'RADIATOR_MINIMUM_SIGNAL',
+	13: 'ROOM_DESIRED_TEMPERATURE',
+	14: 'RELAY_PERCENTAGE_PRIMARY',
+	15: 'RELAY_PERCENTAGE_SECONDARY',
+	16: 'OUTDOOR_TEMPERATURE',
+	17: 'RELAY_PERCENTAGE_ADDITIONAL',
+	18: 'CIRCUIT_1_SHIFT',
+	19: 'CIRCUIT_2_SHIFT',
+	20: 'CIRCUIT_3_SHIFT',
+	21: 'ROOM_OFF_TEMPERATURE',
+	22: 'SCHEDULE',
+	23: 'FLOOR_REQUIRED_TEMPERATURE',
+	24: 'CURRENT_FLOOR_REQUIRED_TEMPERATURE',
+	25: 'WALL_REQUIRED_TEMPERATURE',
+	26: 'CURRENT_WALL_REQUIRED_TEMPERATURE',
+	27: 'HEAT_EXTRICATION',
+	28: 'FLOOR_REDUCED_TEMPERATURE',
+	29: 'WALL_REDUCED_TEMPERATURE',
+	30:	'CURRENT_WORK_MODE_STATUS',
+	31:	'VENTILATION_CIRCUIT',
+	32:	'REQUIRED_HUMIDITY',
+	33:	'POOL_CIRCUIT',
+	34:	'POOL_TEMPERATURE_OFFSET',
+
+	35:	'SCHEDULE_2_0',
+}
+
 
 ProgramFunction = {
 	 1: 'IS_ID_OCCUPIED',
@@ -168,7 +207,7 @@ CircuitFunction = {
 }
 
 ParameterSyncConfigFunction = {
-	0: 'epsc_connect',            # data[0]: source, data[1]:destination
+	0: 'epsc_connect',              # data[0]: source, data[1]:destination
 	1: 'epsc_factoryReset',         # reset all to defaults
 	2: 'epsc_roomCount',            # tells other CALEONs number of rooms
 	3: 'epsc_roomSyncDone',         # there are at least as many rooms as CALEONs present
@@ -176,6 +215,147 @@ ParameterSyncConfigFunction = {
 	5: 'epsc_roomSyncStop',         # stop room sync
 }
 
+
+class SorelExfuncFunction:
+	EF_VIRTUAL     = -3, # is used for flow animation
+	EF_DISABLED    = -2
+	EF_UNSELECTED  = -1
+
+	EF_FIRST       = 0
+
+	(EF_SOLARBYPASS,
+	EF_HEIZEN,
+	EF_HEIZEN2,
+	EF_KUEHLEN,
+	EF_RUECKLAUFANHEBUNG,
+	EF_DISSIPATION,
+	EF_ANTILEGIO,
+	EF_UMLADUNG,
+	EF_DIFFERENZ,
+	EF_HOLZKESSEL) = range(0,10)
+
+	(EF_SCHUTZFUNKTION,
+	EF_DRUCKREGELUNG,
+	EF_BOOSTER,
+	EF_R1PARALLELBETRIEB,  # any relay parallel to R1
+	EF_R2PARALLELBETRIEB,
+	EF_DAUEREIN,
+	EF_HEIZKREISRC21,
+	EF_CIRCULATION,
+	EF_STORAGEHEATING) = range(10, 19)
+	(EF_HCCHEATREQUEST,
+	EF_STORAGESTACKING) = range(EF_STORAGEHEATING, EF_STORAGEHEATING+2)
+# old block fwc
+	(EF_R_V1_PARALLEL,  # any relay parallel to V1
+	EF_R_V2_PARALLEL,
+	EF_R1_PERMANENTLY_ON,   # EF_DAUEREIN can only be used once, fwc use multiple functions
+	EF_R2_PERMANENTLY_ON,
+	EF_R3_PERMANENTLY_ON,
+	EF_R_V3_PARALLEL,
+	EF_V1_PERMANENTLY_ON,
+	EF_V2_PERMANENTLY_ON) = range(20, 28)
+# new block
+	(EF_PARALLEL1,
+	EF_PARALLEL2,
+	EF_PARALLEL3,
+	EF_PERMON1,
+	EF_PERMON2,
+	EF_PERMON3,
+	EF_HC1_PUMP,            # heating circuit
+	EF_HC2_PUMP,
+	EF_EXTERNALALHEATING,
+	EF_NEWLOGMESSAGE,
+
+	EF_EXTRAPUMP,
+	EF_PRIMARYMIXER_UP,
+	EF_PRIMARYMIXER_DOWN,
+	EF_SOLAR,
+	EF_CASCADE,
+	EF_DEHUMIDIFIER,
+	EF_HEATINGROD,
+	EF_THERMOSTAT,
+	EF_DHW_VALVE,  # Brauchwasser Relais
+	EF_BURNER,
+
+	EF_COMPRESSOR,
+	EF_BOILERPUMP,
+	EF_LOADPUMP,
+	EF_GLYCOLPUMP,
+	EF_HEATEXCHANGER,
+	EF_MIX1_UP,
+	EF_MIX1_DOWN,
+	EF_MIX2_UP,
+	EF_MIX2_DOWN,
+	EF_SOLARZONEVALVE,
+
+	EF_SLUDGEPURGE,
+	EF_REMOTERELAY1,
+	EF_REMOTERELAY2,
+	EF_REMOTERELAY3,
+	EF_REMOTERELAY4,
+	EF_RFI_MIX_UP,
+	EF_RFI_MIX_DOWN,
+	EF_TIMER1,
+	EF_TIMER2,
+	EF_TIMER3,
+
+	EF_TIMER4,
+	EF_VENTILATINGFAN,
+	EF_HEATTRANSFER_REVERSE,
+	EF_HEATTRANSFER_PUMP,
+	EF_STORAGE_LAYER1,
+	EF_STORAGE_LAYER2,
+	EF_STORAGE_LAYER3,
+	EF_COOLING_VALVE1,
+	EF_COOLING_VALVE2,
+	EF_FREE_COOLING,
+
+	EF_GROUNDWATER_PUMP,
+	EF_HEATCONTROL_PUMP,
+	EF_HOTWATERSUPPLY, # normally a valve, same functionality as pump of fresh water controller, new for hcc_fresh
+	EF_COLDREQUEST,    # for sdkV4 energyRequst will be used for heating and cooling
+
+	EF_MAX) = range(20, 75)
+
+
+RoomSyncConfigFunction = {
+	SorelExfuncFunction.EF_UNSELECTED     : 'efid_unknown'       ,
+	SorelExfuncFunction.EF_CIRCULATION    : 'efid_circulation'   ,
+	SorelExfuncFunction.EF_DEHUMIDIFIER   : 'efid_dehumidifier'  ,
+	SorelExfuncFunction.EF_DIFFERENZ      : 'efid_difference'    ,
+	SorelExfuncFunction.EF_KUEHLEN        : 'efid_seasonSwitch'  ,
+	SorelExfuncFunction.EF_DHW_VALVE      : 'efid_dhwValve'      ,
+	SorelExfuncFunction.EF_HOTWATERSUPPLY : 'efid_hotwaterSupply',
+	
+	SorelExfuncFunction.EF_TIMER1    : 'efid_userTimer' ,  
+	SorelExfuncFunction.EF_TIMER2    : 'efid_dhwTimer'  ,   # may be replaced by efid_userTimer (relay on/off only) or efid_dhwValve (release time)
+	SorelExfuncFunction.EF_TIMER3    : 'efid_resTimer'  ,   # reserved
+	SorelExfuncFunction.EF_TIMER4    : 'efid_timeSwitch',# master timer function
+	SorelExfuncFunction.EF_HEIZEN    : 'efid_heatingCircuit' ,  # global settings of heating circuit module # pumps 
+	SorelExfuncFunction.EF_HC1_PUMP  : 'efid_hcPump'         ,  # settings for each heating circuit
+	SorelExfuncFunction.EF_HC2_PUMP  : 'efid_masterPump'     ,  
+	SorelExfuncFunction.EF_EXTRAPUMP : 'efid_extraPump'      ,  
+    
+	SorelExfuncFunction.EF_MIX1_UP           : 'efid_mixer'            , # base function used by heating circuit  # mixer variants (handled in module mixer)
+	SorelExfuncFunction.EF_MIX1_DOWN         : 'efid_mixerDown'        , # no function, optional relay for CAN
+	SorelExfuncFunction.EF_MIX2_UP           : 'efid_resMixer'         , # reserved
+	SorelExfuncFunction.EF_MIX2_DOWN         : 'efid_resMixerDown'     , # no function, optional relay for CAN
+	SorelExfuncFunction.EF_PRIMARYMIXER_UP   : 'efid_primaryMixer'     , # variant for primary mixer (fresh water)
+	SorelExfuncFunction.EF_PRIMARYMIXER_DOWN : 'efid_primaryMixerDown' , # no function, optional relay for CAN
+	SorelExfuncFunction.EF_RFI_MIX_UP        : 'efid_rfiMixer'         , # variant for return flow increase mixer
+	SorelExfuncFunction.EF_RFI_MIX_DOWN      : 'efid_rfiMixerDown'     , # no function, optional relay for CAN
+
+	SorelExfuncFunction.EF_THERMOSTAT     : 'efid_thermostat'       ,    # thermostat variants (handled in module thermostat)  # base function 
+	SorelExfuncFunction.EF_HEIZEN2        : 'efid_zone'             ,    # variant for zone valve
+	SorelExfuncFunction.EF_VENTILATINGFAN : 'efid_ventilatingFan'   ,    # variant for fan
+
+	SorelExfuncFunction.EF_HEIZKREISRC21 : 'efid_vhcData'         ,    # new for SDKv4
+	SorelExfuncFunction.EF_REMOTERELAY2  : 'efid_energyRequest'   , 
+	SorelExfuncFunction.EF_REMOTERELAY3  : 'efid_res1'            ,    # reserved
+	SorelExfuncFunction.EF_REMOTERELAY4  : 'efid_res2'            ,    # reserved
+	
+	0 : 'AskForRooms',
+}
 
 Function = {
 	'PROGRAM'            : ProgramFunction,
@@ -187,5 +367,6 @@ Function = {
 	'CIRCUIT'            : CircuitFunction,
 	
 	'PARAMETERSYNCCONFIG': ParameterSyncConfigFunction,
+	'ROOMSYNC'           : RoomSyncConfigFunction,
 }
 
