@@ -231,16 +231,61 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	return (bodyStartStr + bodyStr)
 	
 	
+def getSmartNetControllerBodyDescription(headerFunction, headerFlag, body):
+	if not constants.ControllerFunction.has_key(headerFunction):
+		return ''
+		
+	function = constants.ControllerFunction[headerFunction]
+
+	if function == 'GET_OUTPUT_VALUE' : return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
+	if function == 'JOURNAL'          : return smartNetControllerJournalBodyDescription(headerFlag, body)
+	if function == 'INIT_LOG_TRANSMIT': return smartNetControllerInitLogTransmitDescription(headerFlag, body)
+	if function == 'GET_LOG_PART'     : return smartNetControllerGetLogPartDescription(headerFlag, body)
+	
+	return ''
+	
+	
+def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
+	bodyLen = len(body)
+
+	programTypeId = int('{}'.format(body[0]), 16)
+	parameterId   = int('{}'.format(body[1]), 16)
+	
+	if not constants.ProgramType.has_key(programTypeId):
+		return ''
+	
+	programType = constants.ProgramType[programTypeId]
+	
+	if programType == 'ROOM_DEVICE': 
+		parameter = constants.RoomDeviceParameter[parameterId]
+		parameterStr = '{}.{}:'.format(programType, parameter)
+	else:
+		parameterStr = '{}.{}:'.format(programType, parameterId)
+	
+	for i in range(2, bodyLen):
+		parameterStr + ' {}'.format(body[i])
+		
+	return parameterStr
+	
+def getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body):
+	if not constants.RemoteControlFunction.has_key(headerFunction):
+		return ''
+		
+	function = constants.RemoteControlFunction[headerFunction]
+	
+	if function == 'GET_PARAMETER_VALUE' : return smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body)
+	
+	return ''
+	
 	
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 	if not constants.ProgramType.has_key(headerType):
 		return ''
 
-	if constants.ProgramType[headerType] == 'CONTROLLER':
-		if constants.ControllerFunction[headerFunction] == 'GET_OUTPUT_VALUE' : return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
-		if constants.ControllerFunction[headerFunction] == 'JOURNAL'          : return smartNetControllerJournalBodyDescription(headerFlag, body)
-		if constants.ControllerFunction[headerFunction] == 'INIT_LOG_TRANSMIT': return smartNetControllerInitLogTransmitDescription(headerFlag, body)
-		if constants.ControllerFunction[headerFunction] == 'GET_LOG_PART'     : return smartNetControllerGetLogPartDescription(headerFlag, body)
+	programType = constants.ProgramType[headerType]
+	
+	if programType == 'CONTROLLER'    : return getSmartNetControllerBodyDescription   (headerFunction, headerFlag, body)
+	if programType == 'REMOTE_CONTROL': return getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body)
 	
 	return ''
 	
