@@ -1,10 +1,15 @@
-from prettytable import PrettyTable
+try:
+	from prettytable import PrettyTable
+except ImportError:
+	print('PrettyTable module not installed\nSee https://pypi.org/project/prettytable/\n')
+	exit()
+
 import argparse
 import constants
 import datetime
 import os
 from test.test_funcattrs import FunctionDictsTest
-from compiler.ast import Const
+#from compiler.ast import Const
 from email.base64mime import body_decode
 
 def splitAt(w,n):
@@ -232,7 +237,7 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	
 	
 def getSmartNetControllerBodyDescription(headerFunction, headerFlag, body):
-	if not constants.ControllerFunction.has_key(headerFunction):
+	if headerFunction not in constants.ControllerFunction:
 		return ''
 		
 	function = constants.ControllerFunction[headerFunction]
@@ -251,7 +256,7 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	programTypeId = int('{}'.format(body[0]), 16)
 	parameterId   = int('{}'.format(body[1]), 16)
 	
-	if not constants.ProgramType.has_key(programTypeId):
+	if programTypeId not in constants.ProgramType:
 		return ''
 	
 	programType = constants.ProgramType[programTypeId]
@@ -268,7 +273,7 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	return parameterStr
 	
 def getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body):
-	if not constants.RemoteControlFunction.has_key(headerFunction):
+	if headerFunction not in constants.RemoteControlFunction:
 		return ''
 		
 	function = constants.RemoteControlFunction[headerFunction]
@@ -279,7 +284,7 @@ def getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body):
 	
 	
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
-	if not constants.ProgramType.has_key(headerType):
+	if headerType not in constants.ProgramType:
 		return ''
 
 	programType = constants.ProgramType[headerType]
@@ -432,7 +437,7 @@ def parseKseProtocol(content, outputFile):
 	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 
 
-if __name__ == "__main__":
+def main():
 	parser = argparse.ArgumentParser(description='Parse file name')
 	parser.add_argument('File', metavar='MyFile', nargs='+',
 					help='file with CAN log')
@@ -452,6 +457,9 @@ if __name__ == "__main__":
 		parseKseProtocol(content, OutputFile)
 	
 	
-	print 'Done'
+	print('Done')
 	
+	
+if __name__ == "__main__":
+	main()
 	
