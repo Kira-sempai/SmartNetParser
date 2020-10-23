@@ -263,9 +263,14 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	
 	if programType == 'ROOM_DEVICE': 
 		parameter = constants.RoomDeviceParameter[parameterId]
-		parameterStr = '{}.{}:'.format(programType, parameter)
+	elif programType == 'CONTROLLER':
+		parameter = constants.ControllerParameter[parameterId]
+	elif programType == 'PROGRAM':
+		parameter = constants.ProgramParameter[parameterId]
 	else:
-		parameterStr = '{}.{}:'.format(programType, parameterId)
+		parameter = parameterId
+	
+	parameterStr = '{}.{}:'.format(programType, parameter)
 	
 	for i in range(2, bodyLen):
 		parameterStr + ' {}'.format(body[i])
