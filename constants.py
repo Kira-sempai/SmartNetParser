@@ -64,6 +64,15 @@ ProgramType = {
 	0xC0 : 'CHARLIE',
 }
 
+ProgramParameter = {
+	 1: 'INPUT',
+	 2: 'OUTPUT',
+	 3: 'TITLE',
+	 4: 'INPUT_MAPPING',
+	 5: 'OUTPUT_MAPPING',
+	 6: 'SCHEME',
+	 7: 'TRAINING_ENABLED',
+}
 
 RoomDeviceParameter = {
 	 1: 'ROOM_COMFORT_TEMPERATURE',
@@ -104,6 +113,40 @@ RoomDeviceParameter = {
 	35:	'SCHEDULE_2_0',
 }
 
+ControllerParameter = {
+	 1: 'SENSOR',                   
+	 2: 'OUTPUT',                       
+	 3: 'USED_SENSORS_MASK',           
+	 4: 'USED_RELAYS_MASK',             
+	 5: 'TITLE',                        
+	 6: 'CONTROLLER_TYPE',              
+	 7: 'REVISION',                     
+	 8: 'INPUTS_MASK',                  
+	 9: 'OUTPUTS_MASK',                 
+	10: 'ANALOG_INPUT_SIGNAL_TYPE',     
+	11: 'ANALOG_INPUT_SENSOR_TYPE',     
+	12: 'ANALOG_INPUT_POINT_X1',        
+	13: 'ANALOG_INPUT_POINT_Y1',        
+	14: 'ANALOG_INPUT_POINT_X2',        
+	15: 'ANALOG_INPUT_POINT_Y2',        
+	16: 'ANALOG_OUTPUT_PROFIL',         
+	17: 'ANALOG_OUTPUT_SIGNAL_FORM',    
+	18: 'ANALOG_OUTPUT_SIGNAL_AUS',     
+	19: 'ANALOG_OUTPUT_SIGNAL_EIN',     
+	20: 'ANALOG_OUTPUT_SIGNAL_MAX',     
+	21: 'ANALOG_OUTPUT_DREHZAH_BEI_EIN',
+	22: 'ANALOG_OUTPUT_TYP',            
+	23: 'NETWORK_INPUT_CONFIG',      
+	24: 'NETWORK_VAR_INPUT_CONFIG',  
+	25: 'NETWORK_OUTPUT_CONFIG',     
+	26: 'VARIABLE_TYPE',             
+	27: 'OUTPUT_TO_VARIABLE_MAPPING',
+	28: 'DATE',                        
+	29: 'TIME',                        
+	30:	'SENSOR_CALIBRATION',          
+	31:	'DISCRETTE_OUTPUT_SIGNAL_FORM',
+	32:	'ANALOG_OUTPUT_MAX_Y',
+}
 
 ProgramFunction = {
 	 1: 'IS_ID_OCCUPIED',
