@@ -150,8 +150,6 @@ def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	return 'host={:2} channelId={:2} type={:14} value={:5}'.format(host, channelId, channelTypeName, value)
 
 def smartNetControllerJournalBodyDescription(flag, body):
-	if (flag == 0):
-		return ''
 	
 	if len(body) < 7:
 		return ''
@@ -167,17 +165,13 @@ def smartNetControllerJournalBodyDescription(flag, body):
 	num       = numAndOperation & 0x1F
 	operation = numAndOperation >> 5
 	
-	if operation == 0:
-		crc16 = int('{}{}'.format(body[2], body[1]), 16)
-		timestamp = int('{}{}{}{}'.format(body[6], body[5], body[4], body[3]), 16)
-		messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
-	else:
-		severity = int(body[1], 16)
-		crc16 = int('{}{}'.format(body[3], body[2]), 16)
-		timestamp = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
-		messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
+	severity = int(body[1], 16)
+	crc16 = int('{}{}'.format(body[3], body[2]), 16)
+	timestamp = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
+
+	messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
 	
-	return ''
+	return 'Operation={} DateTime={} severity={} crc16={}'.format(operation, messageDateTime, severity, crc16)
 
 def smartNetControllerInitLogTransmitDescription(flag, body):
 	startTime = int('{}{}{}{}'.format(body[3], body[2], body[1], body[0]), 16)
@@ -238,10 +232,15 @@ def getSmartNetControllerBodyDescription(headerFunction, headerFlag, body):
 		
 	function = constants.ControllerFunction[headerFunction]
 
-	if function == 'GET_OUTPUT_VALUE' : return smartNetControllerGetOutputValueBodyDescription(headerFlag, body)
-	if function == 'JOURNAL'          : return smartNetControllerJournalBodyDescription(headerFlag, body)
-	if function == 'INIT_LOG_TRANSMIT': return smartNetControllerInitLogTransmitDescription(headerFlag, body)
-	if function == 'GET_LOG_PART'     : return smartNetControllerGetLogPartDescription(headerFlag, body)
+	functionParserDict = {
+		'GET_OUTPUT_VALUE' : smartNetControllerGetOutputValueBodyDescription,
+		'JOURNAL'          : smartNetControllerJournalBodyDescription,
+		'INIT_LOG_TRANSMIT': smartNetControllerInitLogTransmitDescription,
+		'GET_LOG_PART'     : smartNetControllerGetLogPartDescription,
+	}
+
+	if function in functionParserDict:
+		return functionParserDict[function](headerFlag, body)
 	
 	return ''
 	
@@ -257,15 +256,13 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	
 	programType = constants.ProgramType[programTypeId]
 	
-	if programType == 'ROOM_DEVICE': 
-		parameter = constants.RoomDeviceParameter[parameterId]
-	elif programType == 'CONTROLLER':
-		parameter = constants.ControllerParameter[parameterId]
-	elif programType == 'PROGRAM':
-		parameter = constants.ProgramParameter[parameterId]
-	else:
+	if ((programType not in constants.ParameterDict) or
+	 (parameterId not in constants.ParameterDict[programType])):
 		parameter = parameterId
-	
+	else:
+		parameter = constants.ParameterDict[programType][parameterId]
+		
+		
 	parameterStr = '{}.{}:'.format(programType, parameter)
 	
 	for i in range(2, bodyLen):
