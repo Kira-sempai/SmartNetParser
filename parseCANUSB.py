@@ -116,6 +116,12 @@ def getSmartNetHeaderDescription(id, programTypeId, functionId, flag):
 
 
 def smartNetControllerGetOutputValueBodyDescription(flag, body):
+	
+	if flag == 0:
+		return ''
+	
+	
+	
 	host = int(body[0], 16)
 	
 	channelIdAndType = int(body[1], 16)
@@ -131,18 +137,15 @@ def smartNetControllerGetOutputValueBodyDescription(flag, body):
 		3: 'CHANNEL_RELAY',
 		4: 'CHANNEL_INPUT',
 		5: 'CHANNEL_OUTPUT',
-#		6: 'CHANNEL_RESERVED',
+		6: 'CHANNEL_RESERVED',
 		7: 'CHANNEL_UNDEFINED',
 	}
 	
 	channelTypeName = typeDict[channelType]
 	
-	if flag == 0:
-		return ''
-	
-	if channelType == 5:
+	if channelTypeName == 'CHANNEL_OUTPUT':
 		value = int(body[2], 16)
-	elif channelType == 2:
+	elif channelTypeName == 'CHANNEL_SENSOR':
 		value = int('{}{}'.format(body[2], body[3]), 16)/10.0
 	else:
 		value = ''
@@ -165,13 +168,21 @@ def smartNetControllerJournalBodyDescription(flag, body):
 	num       = numAndOperation & 0x1F
 	operation = numAndOperation >> 5
 	
-	severity = int(body[1], 16)
-	crc16 = int('{}{}'.format(body[3], body[2]), 16)
-	timestamp = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
-
-	messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
+	if operation in [0, 1]:
+		severity = int(body[1], 16)
+		crc16 = int('{}{}'.format(body[3], body[2]), 16)
+		timestamp = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
+		messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
+		return 'Operation={} N={} DateTime={} severity={} crc16={}'.format(operation, num, messageDateTime, severity, crc16)
+	elif operation == 2:
+		code = body[1]
+		param_ex = '[{} {}]'.format(body[2], body[3])
+		param = '[{} {} {} {}]'.format(body[4], body[5], body[6], body[7])
+		return 'Operation={} N={} Code={} Param={} ParamEx={}'.format(operation, num, code, param, param_ex)
+	else:
+		param_ex = '[{} {} {} {} {} {}]'.format(body[1], body[2], body[3], body[4], body[5], body[6])
+		return 'Operation={} N={} ParamEx={}'.format(operation, num, param_ex)
 	
-	return 'Operation={} DateTime={} severity={} crc16={}'.format(operation, messageDateTime, severity, crc16)
 
 def smartNetControllerInitLogTransmitDescription(flag, body):
 	startTime = int('{}{}{}{}'.format(body[3], body[2], body[1], body[0]), 16)
@@ -195,7 +206,7 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	 0xFF: 'GET_CRC',
 	}
 	
-	if control.has_key(chunkControlInt):
+	if chunkControlInt in control:
 		chunkControlStr = control[chunkControlInt]
 	else:
 		chunkControlStr = str(chunkControlInt)
