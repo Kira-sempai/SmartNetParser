@@ -111,6 +111,7 @@ RoomDeviceParameter = {
 	34:	'POOL_TEMPERATURE_OFFSET',
 
 	35:	'SCHEDULE_2_0',
+	36: 'LOCATION',
 }
 
 ControllerParameter = {
@@ -147,6 +148,13 @@ ControllerParameter = {
 	31:	'DISCRETTE_OUTPUT_SIGNAL_FORM',
 	32:	'ANALOG_OUTPUT_MAX_Y',
 }
+
+ParameterDict = {
+	'PROGRAM' : ProgramParameter,
+	'ROOM_DEVICE': RoomDeviceParameter,
+	'CONTROLLER' : ControllerParameter
+}
+
 
 ProgramFunction = {
 	 1: 'IS_ID_OCCUPIED',
