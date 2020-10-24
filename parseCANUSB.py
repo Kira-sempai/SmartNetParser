@@ -36,10 +36,6 @@ def prepareSmartNetTable():
 						'dT',
 						'MT',
 						'Header',
-						'Flag',
-						'Func',
-						'ID',
-						'Type',
 						'Body',
 						'Parsed header',
 						'Parsed body'
@@ -329,10 +325,6 @@ def parseSmartNetProtocol(content, outputFile):
 					delta,
 					messageType,
 					headerStr,
-					headerFlag,
-					headerFunction,
-					headerID,
-					headerType,
 					bodyStr,
 					headerDescription,
 					bodyDescription
