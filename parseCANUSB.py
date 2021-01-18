@@ -46,9 +46,17 @@ def prepareSmartNetTable():
 	return t
 
 def parseSmartNetCANUSBLine(line):
+	messageTypeSize = 1
+	headerSize      = 8
+	bodySizeSize    = 1
+	lineMinSize = messageTypeSize + headerSize + bodySizeSize
+	
+	if len(line) < lineMinSize: return '--', '--', '--', '--'
+	
 	messageType, line = cutFromLine(line, 1)
 	headerLen = getHeaderLen(messageType)
-	if headerLen != 8: return messageType, None, None, None
+	
+	if headerLen != 8: return '--', '--', '--', '--'
 	
 	header, line = cutFromLine(line, headerLen)
 	header = splitAt(header, 2)
@@ -59,10 +67,12 @@ def parseSmartNetCANUSBLine(line):
 	body = splitAt(body, 2)
 	timestamp, line = cutFromLine(line, 4)
 	
-	if len(timestamp) == 0:
-		timestamp = '0000'
+	if isinstance(timestamp, int):
+		timestampInt = int(timestamp, 16)
+	else:
+		timestampInt = 0
 	
-	return messageType, header, body, int(timestamp, 16)
+	return messageType, header, body, timestampInt
 
 def parseSmartNetHeader(header):
 	if len(header) != 4: return None, None, None, None
@@ -115,12 +125,20 @@ def getSmartNetHeaderDescription(id, programTypeId, functionId, flag):
 	return '{}({:3})->{} {:8}'.format(programTypeName, id, functionName, flagName)
 
 
-def smartNetControllerGetOutputValueBodyDescription(flag, body):
+def smartNetControllerIAmHereDescription(flag, body):
+	controllerTypeId  = int('{}'.format(body[0]), 16)
 	
+	if len(body) > 1:
+		deviceId = int('{}'.format(body[1]), 16)
+		
+	if len(body) > 2:
+		oemId = int('{}'.format(body[2]), 16)
+	
+	return 'Ctrl Type: ' + constants.ControllerType[controllerTypeId]
+	
+def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	if flag == 0:
 		return ''
-	
-	
 	
 	host = int(body[0], 16)
 	
@@ -170,18 +188,19 @@ def smartNetControllerJournalBodyDescription(flag, body):
 	
 	if operation in [0, 1]:
 		severity = int(body[1], 16)
-		crc16 = int('{}{}'.format(body[3], body[2]), 16)
+#		crc16 = int('{}{}'.format(body[3], body[2]), 16)
+		crc16 = body[3] + body[2]
 		timestamp = int('{}{}{}{}'.format(body[7], body[6], body[5], body[4]), 16)
 		messageDateTime = datetime.datetime.utcfromtimestamp(timestamp)
-		return 'Operation={} N={} DateTime={} severity={} crc16={}'.format(operation, num, messageDateTime, severity, crc16)
+		return 'Op={} N={} DT={} severity={} crc={}'.format(operation, num, messageDateTime, severity, crc16)
 	elif operation == 2:
 		code = body[1]
 		param_ex = '[{} {}]'.format(body[2], body[3])
 		param = '[{} {} {} {}]'.format(body[4], body[5], body[6], body[7])
-		return 'Operation={} N={} Code={} Param={} ParamEx={}'.format(operation, num, code, param, param_ex)
+		return 'Op={} N={} Code={} Param={} ParamEx={}'.format(operation, num, code, param, param_ex)
 	else:
 		param_ex = '[{} {} {} {} {} {}]'.format(body[1], body[2], body[3], body[4], body[5], body[6])
-		return 'Operation={} N={} ParamEx={}'.format(operation, num, param_ex)
+		return 'Op={} N={} ParamEx={}'.format(operation, num, param_ex)
 	
 
 def smartNetControllerInitLogTransmitDescription(flag, body):
@@ -244,6 +263,7 @@ def getSmartNetControllerBodyDescription(headerFunction, headerFlag, body):
 	function = constants.ControllerFunction[headerFunction]
 
 	functionParserDict = {
+		'I_AM_HERE'        : smartNetControllerIAmHereDescription,
 		'GET_OUTPUT_VALUE' : smartNetControllerGetOutputValueBodyDescription,
 		'JOURNAL'          : smartNetControllerJournalBodyDescription,
 		'INIT_LOG_TRANSMIT': smartNetControllerInitLogTransmitDescription,
@@ -307,9 +327,16 @@ def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
 
+	i = 0
 	oldTimestamp = 0
 	for line in content:
-		messageType, header, body, timestamp = parseSmartNetCANUSBLine(line)
+		i = i + 1
+		try:
+			messageType, header, body, timestamp = parseSmartNetCANUSBLine(line)
+		except:
+			print('Line %d: %s fail' %(i, line))
+			continue
+		
 		if not header: continue
 		
 		(	headerFlag,
@@ -324,6 +351,10 @@ def parseSmartNetProtocol(content, outputFile):
 		bodyStr   = ' '.join(body)
 		
 		delta = timestamp - oldTimestamp
+		
+		if delta < 0:
+			delta = delta + 60000
+			
 		oldTimestamp = timestamp
 		
 		headerDescription = getSmartNetHeaderDescription(headerID, headerType, headerFunction, headerFlag)
