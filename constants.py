@@ -9,6 +9,25 @@ smartNetHeaderFlag = {
 	1: 'Response',
 }
 
+ControllerType = {
+	 0: 'UNDEFINED',
+	 1: 'STDC',
+	 2: 'LTDC',
+	 3: 'XHCC',
+	 4: 'SWN',
+	 5: 'SWD',
+	 6: 'CALEON',
+	 7: 'XHCC_S62',
+	 8: 'LTDC_S45',
+	 9: 'VIRTUAL',
+	10: 'SWK',
+	11: 'SWK_1',
+	12: 'CWC_CAN',
+	13: 'CALEON_RC50',
+	14: 'EXT_CONTROLLER',
+	15: 'CALEONBOX',
+}
+
 ProgramType = {
 	 0: 'CAN_PROGRAM_TYPE_UNDEFINED',
 	 1: 'PROGRAM',
@@ -208,16 +227,24 @@ ControllerFunction = {
 	
 	40 : 'I_AM_RESETED',
 	41 : 'DATALOGGER_TEST',
-	42 : 'GET_FW_VERSION',
-	43 : 'INSTALL_FW_UPDATE',
-	44 : 'SYSTEM_SELFTEST',
-	45 : 'GET_DEVICE_INFO',
 	
+	42 : 'IS_ANYBODY_HERE_CAN2', # IS_ANYBODY_HERE that comes over CAN2 or is routed CAN2 -> CAN1
+	43 : 'I_AM_HERE_CAN2',       # I_AM_HERE that comes over CAN2 or is routed CAN2 -> CAN1
+	44 : 'I_AM_RESETED_CAN2',    # I_AM_RESETED that comes over CAN2 or is routed CAN2 -> CAN1
+	
+	
+	
+	60 : 'GET_FW_VERSION',
+	61 : 'INSTALL_FW_UPDATE',
+	62 : 'SYSTEM_SELFTEST',
+	
+	63 : 'GET_DEVICE_INFO',
+	64 : 'GET_DEVICE_INFO2',
 	
 	80 : 'INIT_LOG_TRANSMIT',
 	81 : 'GET_LOG_PART',
-	
 }
+
 
 RemoteControlFunction = {
 	 1: 'GET_PARAMETER_VALUE',
