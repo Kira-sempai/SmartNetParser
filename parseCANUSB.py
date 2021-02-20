@@ -42,6 +42,7 @@ def prepareSmartNetTable():
 					])
 	t.align = 'r'
 	t.align['Body'] = 'l'
+	t.align['Parsed header'] = 'l'
 	t.align['Parsed body'] = 'l'
 	return t
 
@@ -122,11 +123,17 @@ def getSmartNetHeaderDescription(id, programTypeId, functionId, flag):
 	functionName    = prg.getFunctionName(functionId)
 	flagName        = constants.smartNetHeaderFlag[flag]
 	
-	return '{}({:3})->{} {:8}'.format(programTypeName, id, functionName, flagName)
+	return '{} {}({:3})->{}'.format(flagName[:3], programTypeName, id, functionName)
 
 
 def smartNetControllerIAmHereDescription(flag, body):
-	controllerTypeId  = int('{}'.format(body[0]), 16)
+	if flag == 0:
+		return ''
+	
+	try:
+		controllerTypeId  = int('{}'.format(body[0]), 16)
+	except:
+		return ''
 	
 	if len(body) > 1:
 		deviceId = int('{}'.format(body[1]), 16)
@@ -134,7 +141,14 @@ def smartNetControllerIAmHereDescription(flag, body):
 	if len(body) > 2:
 		oemId = int('{}'.format(body[2]), 16)
 	
-	return 'Ctrl Type: ' + constants.ControllerType[controllerTypeId]
+	typeDict = constants.ControllerType
+	
+	if controllerTypeId in typeDict:
+		type = typeDict[controllerTypeId]
+	else:
+		type = 'UNK'
+	
+	return 'Ctrl Type: ' + type
 	
 def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	if flag == 0:
