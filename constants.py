@@ -62,24 +62,25 @@ ProgramType = {
     
 	0x80 : 'DATALOGGER_MONITOR',
 	0x81 : 'EVENT',
-	0x82 : 'FWC_CASCADE',
-	0x83 : 'DATALOGGER_NAMEDSENSORS',
-	0x84 : 'HCC',
-	0x85 : 'DL_CONFIGMENU_DATALOGGER',
-	0x86 : 'DL_CONFIGMENU_CONTROLLER',
-	0x87 : 'CLOCKSYNC',
-	0x88 : 'REMOTERELAY',
-	0x89 : 'HOLIDAYRETURNDATE',
-	0x8A : 'DAYSCHEDULE',
-	0x8B : 'AVAILABLERESOURCES',
-	0x8C : 'PARAMETERSYNC',
-	0x8D : 'RESOURCEDATA1WIRE',
-	0x8E : 'FILETRANSFER',
-	0x8F : 'PARAMETERSYNCCONFIG',
-	0x90 : 'ROOMSYNC',
-	0x91 : 'PANIC',
-	0x92 : 'VHCDATA_UPDATE',
-	
+	0x82 : 'FWC_CASCADE',             # freshwater controller cascading functions
+	0x83 : 'DATALOGGER_NAMEDSENSORS', # request sensor values by name eg. outdor, room temperature/humidity, rc switch, or get changes
+	0x84 : 'HCC',                     # heating circuit control program, eg. heat request
+	0x85 : 'DL_CONFIGMENU_DATALOGGER',# datalogger configuration, receiver is datalogger                                                                          
+	0x86 : 'DL_CONFIGMENU_CONTROLLER',# receiver is controller                                                                                                    
+	0x87 : 'CLOCKSYNC',               # send/receive date and time                                                                                                
+	0x88 : 'REMOTERELAY',             # set relay from external controller                                                                                        
+	0x89 : 'HOLIDAYRETURNDATE',       # holiday return date                                                                                                       
+	0x8A : 'DAYSCHEDULE',             # day schedule, function type is used to select day of the week, 0 = monday, 7 messages needed for week schedule            
+	0x8B : 'AVAILABLERESOURCES',      # sending available resources (relays, sensors, ...) on request ore at startup                                              
+	0x8C : 'PARAMETERSYNC',           # sending parameter values from one device to an other, parameter list / functionId is defined in exfuncIDs.h (teFunctionId)
+	0x8D : 'RESOURCEDATA1WIRE',       # sending additional data of resource on request (1wire ROM data)                                                           
+	0x8E : 'FILETRANSFER',            # send multiple can packets                                                                                                 
+	0x8F : 'PARAMETERSYNCCONFIG',     # configuration for parameter sync, factory reset, ...                                                                      
+	0x90 : 'ROOMSYNC',                # special PARAMETERSYNC for vhcData (no destination check)                                                                  
+	0x91 : 'PANIC',                   # tells other controllers to slow down CAN packet transfer frequency                                                        
+	0x92 : 'VHCDATA_UPDATE',          # function:0 broadcast last manual mode change                                                                              
+	0x93 : 'MSGLOG',                  # global message log: Function = message severity, Data = [4 byte param1, 2 byte param2, 2 byte message code]
+
 	0xC0 : 'CHARLIE',
 }
 
