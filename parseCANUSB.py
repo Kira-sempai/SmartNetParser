@@ -68,7 +68,7 @@ def parseSmartNetCANUSBLine(line):
 	body = splitAt(body, 2)
 	timestamp, line = cutFromLine(line, 4)
 	
-	if isinstance(timestamp, int):
+	if len(timestamp) == 4:
 		timestampInt = int(timestamp, 16)
 	else:
 		timestampInt = 0
