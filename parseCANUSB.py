@@ -386,106 +386,27 @@ def parseSmartNetProtocol(content, outputFile):
 	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 	
 	
-def prepareKseTable():
-	t = PrettyTable([	'T',
-						'dT',
-						'MT',
-						'Header',
-						'module',
-						'busId',
-						'Body',
-						'Parsed header',
-						'Parsed body'
-					])
-	t.align = 'r'
-	t.align['Body'] = 'l'
-	return t
-	
-def parseKseCANUSBLine(line):
+def parseCANUSBLineCommon(line):
 	messageType, line = cutFromLine(line, 1)
-	headerLen = getHeaderLen(messageType)
+	header     , line = cutFromLine(line, getHeaderLen(messageType))
+	bodySize   , line = cutFromLine(line, 1)
+	body       , line = cutFromLine(line, int(bodySize, 16) * 2)
+	timestamp  , line = cutFromLine(line, 4)
 	
-	if headerLen != 3: return messageType, None, None, None
-	
-	header, line = cutFromLine(line, headerLen)
-	
-	bodySize, line = cutFromLine(line, 1)
-	bodySize = int(bodySize, 16)
-	body, line = cutFromLine(line, bodySize * 2)
 	body = splitAt(body, 2)
-	timestamp, line = cutFromLine(line, 4)
 	
-	return messageType, header, body, int(timestamp, 16)
-
-	
-def parseKseHeader(header):
-	header = int(header, 16)
-	
-	module = (header >> 7) & 0x0F
-	busId  = (header & 0x7F)
-	
-	return module, busId
-	
-def getKseModuleName(module):
-    return {
-        0x03: 'Kessel'   ,
-        0x06: 'Bedien'   ,
-        0x09: 'Manager'  ,
-        0x0A: 'Heizmodul',
-        0x0C: 'Mischer'  ,
-		0x0D: 'CoCo'     ,
-    }.get(module, 'None')    # 5 is default if module not found
-	
-def getKseFuntionName(body):
-	functionCodeSize = 3 if body[2] == 'FA' else 1
-	if functionCodeSize == 1:
-		if body[2] == '0E': return 'DHW Temperature'
+	if len(timestamp) == 4:
+		timestamp = int(timestamp, 16)
+	else:
+		timestamp = 0
 		
-	return 'Undefined'
+	return {
+		'messageType' : messageType,
+		'header'      : header,
+		'body'        : body,
+		'timestamp'   : timestamp,
+	}
 	
-def getKseBodyDescription(body):
-	destModule  = int(body[0][0], 16)
-	messageType = int(body[0][1], 16)
-	destModuleId = body[1]
-	functionName = getKseFuntionName(body)
-	
-	toModule = getKseModuleName(destModule)
-	messageTypeStr = 'request' if messageType == 1 else 'response'
-	return ('to ' + toModule + ' (' + destModuleId + ') ' +
-		messageTypeStr + ' ' +
-		functionName)
-	
-	
-def parseKseProtocol(content, outputFile):
-	t = prepareKseTable()
-	oldTimestamp = 0
-	for line in content:
-		messageType, header, body, timestamp = parseKseCANUSBLine(line)
-		if not header: continue
-		
-		module, busId = parseKseHeader(header)
-		
-		bodyStr   = ' '.join(body)
-		
-		delta = timestamp - oldTimestamp
-		oldTimestamp = timestamp
-		
-		parsedHeader = getKseModuleName(module)
-		parsedBody   = getKseBodyDescription(body)
-		
-		t.add_row([	timestamp,
-					delta,
-					messageType,
-					header,
-					format(module, '#04x'),
-					busId,
-					bodyStr,
-					parsedHeader,
-					parsedBody
-				])
-	
-	with open(outputFile, 'w') as Output: Output.write(t.get_string())
-
 
 def main():
 	parser = argparse.ArgumentParser(description='Parse file name')
@@ -501,7 +422,7 @@ def main():
 	
 	with open(FileToParse, 'r') as Input: content = Input.readlines()
 	
-	if True:
+	if False:
 		parseSmartNetProtocol(content, OutputFile)
 	else:
 		parseKseProtocol(content, OutputFile)
