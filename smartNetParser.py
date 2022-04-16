@@ -256,8 +256,7 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 		parameter = parameterId
 	else:
 		parameter = constantsSmartNet.ParameterDict[programType][parameterId]
-		
-		
+	
 	parameterStr = '{}.{}:'.format(programType, parameter)
 	
 	for i in range(2, bodyLen):
@@ -287,58 +286,63 @@ def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 	
 	return ''
 	
+def parseSmartNetProtocolLine(line, t):
+	parseSmartNetProtocolLine.i += 1
 	
+	try:
+		pLine = parseSmartNetCANUSBLine(line)
+	except:
+		print('Line %d: %s fail' %(parseSmartNetProtocolLine.i, line))
+		return
+	
+	if pLine['messageType'] != 'T':
+		print('MessageType {}'.format(pLine['messageType']))
+		return
+	
+	(	headerFlag,
+		headerFunction,
+		headerID,
+		headerType
+	) = parseSmartNetHeader(pLine['header'])
+	
+	if headerFlag == None:
+		print('header: {}'.format(pLine['header']))
+		return
+	
+	body      = pLine['body']
+	timestamp = pLine['timestamp']
+	
+	headerStr = ' '.join(pLine['header'])
+	bodyStr   = ' '.join(body)
+	
+	delta = timestamp - parseSmartNetProtocolLine.timestamp
+	
+	if delta < 0:
+		delta = delta + 60000
+		
+	parseSmartNetProtocolLine.timestamp = timestamp
+	
+	headerDescription = getSmartNetHeaderDescription(headerID, headerType, headerFunction, headerFlag)
+	bodyDescription   = getSmartNetBodyDescription  (headerType, headerFunction, headerFlag, body)
+	
+	t.add_row([	timestamp,
+				delta,
+				pLine['messageType'],
+				headerStr,
+				bodyStr,
+				headerDescription,
+				bodyDescription
+			])
+	
+#init static var
+parseSmartNetProtocolLine.i         = 0
+parseSmartNetProtocolLine.timestamp = 0
+
 def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
 
-	i = 0
-	oldTimestamp = 0
 	for line in content:
-		i = i + 1
-		try:
-			pLine = parseSmartNetCANUSBLine(line)
-		except:
-			print('Line %d: %s fail' %(i, line))
-			continue
-		
-		if pLine['messageType'] != 'T':
-			print('MessageType {}'.format(pLine['messageType']))
-			continue
-		
-		(	headerFlag,
-			headerFunction,
-			headerID,
-			headerType
-		) = parseSmartNetHeader(pLine['header'])
-		
-		if headerFlag == None:
-			print('header: {}'.format(pLine['header']))
-			continue
-		
-		body      = pLine['body']
-		timestamp = pLine['timestamp']
-		
-		headerStr = ' '.join(pLine['header'])
-		bodyStr   = ' '.join(body)
-		
-		delta = timestamp - oldTimestamp
-		
-		if delta < 0:
-			delta = delta + 60000
-			
-		oldTimestamp = timestamp
-		
-		headerDescription = getSmartNetHeaderDescription(headerID, headerType, headerFunction, headerFlag)
-		bodyDescription   = getSmartNetBodyDescription  (headerType, headerFunction, headerFlag, body)
-		
-		t.add_row([	timestamp,
-					delta,
-					pLine['messageType'],
-					headerStr,
-					bodyStr,
-					headerDescription,
-					bodyDescription
-				])
+		parseSmartNetProtocolLine(line, t)
 	
 	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 	
