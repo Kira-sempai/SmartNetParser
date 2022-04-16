@@ -1,6 +1,11 @@
+try:
+	from prettytable import PrettyTable
+except ImportError:
+	print('PrettyTable module not installed\nSee https://pypi.org/project/prettytable/\n')
+	exit()
 
-from parseCANUSB import parseCANUSBLineCommon
-
+from commonParser import parseCANUSBLineCommon
+import constantsKse
 
 
 def parseKseCANUSBLine(line):
