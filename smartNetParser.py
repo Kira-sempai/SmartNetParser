@@ -5,7 +5,7 @@ except ImportError:
 	exit()
 
 from commonParser import parseCANUSBLineCommon
-import constants
+import constantsSmartNet
 
 def prepareSmartNetTable():
 	t = PrettyTable([	'T',
@@ -47,15 +47,15 @@ class Program(object):
 		self.id   = id
 		self.type = type
 		
-		if (self.type in constants.ProgramType) and (constants.ProgramType[self.type] in constants.Function):
-			self.functionDict = constants.Function[constants.ProgramType[self.type]]
+		if (self.type in constantsSmartNet.ProgramType) and (constantsSmartNet.ProgramType[self.type] in constantsSmartNet.Function):
+			self.functionDict = constantsSmartNet.Function[constantsSmartNet.ProgramType[self.type]]
 		else:
 			self.functionDict = None	
 		
 	
 	def getProgramTypeName(self):
-		if self.type in constants.ProgramType:
-			return constants.ProgramType[self.type]
+		if self.type in constantsSmartNet.ProgramType:
+			return constantsSmartNet.ProgramType[self.type]
 		
 		return 'UNK_Type'
 		
@@ -71,7 +71,7 @@ def getSmartNetHeaderDescription(id, programTypeId, functionId, flag):
 	
 	programTypeName = prg.getProgramTypeName()
 	functionName    = prg.getFunctionName(functionId)
-	flagName        = constants.smartNetHeaderFlag[flag]
+	flagName        = constantsSmartNet.smartNetHeaderFlag[flag]
 	
 	return '{} {}({:3})->{}'.format(flagName[:3], programTypeName, id, functionName)
 
@@ -91,7 +91,7 @@ def smartNetControllerIAmHereDescription(flag, body):
 	if len(body) > 2:
 		oemId = int('{}'.format(body[2]), 16)
 	
-	typeDict = constants.ControllerType
+	typeDict = constantsSmartNet.ControllerType
 	
 	if controllerTypeId in typeDict:
 		type = typeDict[controllerTypeId]
@@ -196,7 +196,7 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	
 	bodyStartStr = (str(chunkId) + '.' + chunkControlStr)
 	
-	if constants.smartNetHeaderFlag[flag] == 'Request':
+	if constantsSmartNet.smartNetHeaderFlag[flag] == 'Request':
 		return (bodyStartStr + '!')
 	
 	dataSize = 6
@@ -221,10 +221,10 @@ def smartNetControllerGetLogPartDescription(flag, body):
 	
 	
 def getSmartNetControllerBodyDescription(headerFunction, headerFlag, body):
-	if headerFunction not in constants.ControllerFunction:
+	if headerFunction not in constantsSmartNet.ControllerFunction:
 		return ''
 		
-	function = constants.ControllerFunction[headerFunction]
+	function = constantsSmartNet.ControllerFunction[headerFunction]
 
 	functionParserDict = {
 		'I_AM_HERE'        : smartNetControllerIAmHereDescription,
@@ -246,16 +246,16 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	programTypeId = int('{}'.format(body[0]), 16)
 	parameterId   = int('{}'.format(body[1]), 16)
 	
-	if programTypeId not in constants.ProgramType:
+	if programTypeId not in constantsSmartNet.ProgramType:
 		return ''
 	
-	programType = constants.ProgramType[programTypeId]
+	programType = constantsSmartNet.ProgramType[programTypeId]
 	
-	if ((programType not in constants.ParameterDict) or
-	 (parameterId not in constants.ParameterDict[programType])):
+	if ((programType not in constantsSmartNet.ParameterDict) or
+	 (parameterId not in constantsSmartNet.ParameterDict[programType])):
 		parameter = parameterId
 	else:
-		parameter = constants.ParameterDict[programType][parameterId]
+		parameter = constantsSmartNet.ParameterDict[programType][parameterId]
 		
 		
 	parameterStr = '{}.{}:'.format(programType, parameter)
@@ -266,10 +266,10 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	return parameterStr
 	
 def getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body):
-	if headerFunction not in constants.RemoteControlFunction:
+	if headerFunction not in constantsSmartNet.RemoteControlFunction:
 		return ''
 		
-	function = constants.RemoteControlFunction[headerFunction]
+	function = constantsSmartNet.RemoteControlFunction[headerFunction]
 	
 	if function == 'GET_PARAMETER_VALUE' : return smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body)
 	
@@ -277,10 +277,10 @@ def getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body):
 	
 	
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
-	if headerType not in constants.ProgramType:
+	if headerType not in constantsSmartNet.ProgramType:
 		return ''
 
-	programType = constants.ProgramType[headerType]
+	programType = constantsSmartNet.ProgramType[headerType]
 	
 	if programType == 'CONTROLLER'    : return getSmartNetControllerBodyDescription   (headerFunction, headerFlag, body)
 	if programType == 'REMOTE_CONTROL': return getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body)
