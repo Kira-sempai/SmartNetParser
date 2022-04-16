@@ -1,9 +1,4 @@
 
-CANHeaderIDE = {
-	't': 'STANDARD',
-	'T': 'EXTENDED',
-}
-
 smartNetHeaderFlag = {
 	0: 'Request',
 	1: 'Response',
@@ -170,7 +165,7 @@ ControllerParameter = {
 }
 
 ParameterDict = {
-	'PROGRAM' : ProgramParameter,
+	'PROGRAM'    : ProgramParameter,
 	'ROOM_DEVICE': RoomDeviceParameter,
 	'CONTROLLER' : ControllerParameter
 }
