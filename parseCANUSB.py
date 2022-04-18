@@ -20,14 +20,12 @@ def initParser():
 					nargs   ='?', 
 					choices = ['smartnet', 'kse'],
 					default ='smartnet',
-					#action='store_true',
 					help = 'Select protocol to parse'
 					)
 
 	return parser
 	
 def main():
-	
 	parser = initParser()
 	arg = parser.parse_args()
 	
