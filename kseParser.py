@@ -17,25 +17,34 @@ def parseKseHeader(header):
 	
 	return module, busId
 	
-def getKseModuleName(module):
-    return constantsKse.kseModule.get(module, 'None')    # 5 is default if module not found
+def getKseModuleNameId(module, busId):
+	moduleName = constantsKse.kseModule.get(module, 'None')
+	return '{} ({})'.format(moduleName, busId)
 	
 def getKseFuntionName(body):
 	functionCodeSize = 3 if body[2] == 'FA' else 1
 	if functionCodeSize == 1:
-		if body[2] == '0E': return 'DHW Temperature'
+		if body[2] == '0E':
+			value = int(body[3] + body[4], 16)
+			if value == 0x8000:
+				temperatureValue = 'Undefined'
+			else:
+				temperatureValue = '%0.1f' % (value/10.0)
+			 
+			return 'DHW Temperature = %s' %(temperatureValue)
 		
 	return 'Undefined'
 	
 def getKseBodyDescription(body):
-	destModule  = int(body[0][0], 16)
-	messageType = int(body[0][1], 16)
-	destModuleId = body[1]
+	destModule   = int(body[0][0], 16)
+	messageType  = int(body[0][1], 16)
+	destModuleId = int(body[1]   , 16)
+	
 	functionName = getKseFuntionName(body)
 	
-	toModule = getKseModuleName(destModule)
+	toModule = getKseModuleNameId(destModule, destModuleId)
 	messageTypeStr = 'request' if messageType == 1 else 'response'
-	return ('to ' + toModule + ' (' + destModuleId + ') ' +
+	return ('to ' + toModule +
 		messageTypeStr + ' ' +
 		functionName)
 	
@@ -45,8 +54,6 @@ def prepareKseTable():
 						'dT',
 						'MT',
 						'Header',
-						'module',
-						'busId',
 						'Body',
 						'Parsed header',
 						'Parsed body'
@@ -75,7 +82,7 @@ def parseKseProtocolLine(line, t):
 	
 	module, busId = parseKseHeader(header)
 	
-	parsedHeader = getKseModuleName(module)
+	parsedHeader = getKseModuleNameId(module, busId)
 	parsedBody   = getKseBodyDescription(body)
 	
 	headerStr = ' '.join(header)
@@ -85,8 +92,6 @@ def parseKseProtocolLine(line, t):
 				delta,
 				pLine['messageType'],
 				headerStr,
-				format(module, '#04x'),
-				busId,
 				bodyStr,
 				parsedHeader,
 				parsedBody
