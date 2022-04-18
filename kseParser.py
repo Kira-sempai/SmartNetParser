@@ -8,13 +8,9 @@ from commonParser import parseCANUSBLineCommon
 import constantsKse
 
 
-def parseKseCANUSBLine(line):
-	return parseCANUSBLineCommon(line)
-	
-
 
 def parseKseHeader(header):
-	header = int(header, 16)
+	header = int(header[0] + header[1], 16)
 	
 	module = (header >> 7) & 0x0F
 	busId  = (header & 0x7F)
@@ -59,38 +55,49 @@ def prepareKseTable():
 	t.align['Body'] = 'l'
 	return t
 	
+
+def parseKseProtocolLine(line, t):
+	parseKseProtocolLine.i += 1
 	
+	try:
+		pLine = parseCANUSBLineCommon(line)
+	except:
+		print('Line %d: %s fail' %(parseKseProtocolLine.i, line))
+		return
+	
+	if pLine['messageType'] != 't':
+		return
+	
+	body      = pLine['body']
+	timestamp = pLine['timestamp']
+	header    = pLine['header']
+	delta     = pLine['deltaT']
+	
+	module, busId = parseKseHeader(header)
+	
+	parsedHeader = getKseModuleName(module)
+	parsedBody   = getKseBodyDescription(body)
+	
+	headerStr = ' '.join(header)
+	bodyStr   = ' '.join(body)
+	
+	t.add_row([	timestamp,
+				delta,
+				pLine['messageType'],
+				headerStr,
+				format(module, '#04x'),
+				busId,
+				bodyStr,
+				parsedHeader,
+				parsedBody
+			])
+	
+#init static var
+parseKseProtocolLine.i         = 0
+
 def parseKseProtocol(content, outputFile):
 	t = prepareKseTable()
-	oldTimestamp = 0
 	for line in content:
-		pLine = parseKseCANUSBLine(line)
-		
-		if pLine['messageType'] != 't':
-			continue
-		
-		body      = pLine['body']
-		timestamp = pLine['timestamp']
-		
-		module, busId = parseKseHeader(pLine['header'])
-		
-		bodyStr   = ' '.join(body)
-		
-		delta = timestamp - oldTimestamp
-		oldTimestamp = timestamp
-		
-		parsedHeader = getKseModuleName(module)
-		parsedBody   = getKseBodyDescription(body)
-		
-		t.add_row([	timestamp,
-					delta,
-					pLine['messageType'],
-					pLine['header'],
-					format(module, '#04x'),
-					busId,
-					bodyStr,
-					parsedHeader,
-					parsedBody
-				])
+		parseKseProtocolLine(line, t)
 	
 	with open(outputFile, 'w') as Output: Output.write(t.get_string())
