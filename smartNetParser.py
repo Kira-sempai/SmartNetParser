@@ -22,9 +22,6 @@ def prepareSmartNetTable():
 	t.align['Parsed body']   = 'l'
 	return t
 
-def parseSmartNetCANUSBLine(line):
-	return parseCANUSBLineCommon(line)
-
 def parseSmartNetHeader(header):
 	if len(header) != 4: return None, None, None, None
 
@@ -290,7 +287,7 @@ def parseSmartNetProtocolLine(line, t):
 	parseSmartNetProtocolLine.i += 1
 	
 	try:
-		pLine = parseSmartNetCANUSBLine(line)
+		pLine = parseCANUSBLineCommon(line)
 	except:
 		print('Line %d: %s fail' %(parseSmartNetProtocolLine.i, line))
 		return
@@ -311,16 +308,12 @@ def parseSmartNetProtocolLine(line, t):
 	
 	body      = pLine['body']
 	timestamp = pLine['timestamp']
+	delta     = pLine['deltaT']
 	
 	headerStr = ' '.join(pLine['header'])
 	bodyStr   = ' '.join(body)
 	
-	delta = timestamp - parseSmartNetProtocolLine.timestamp
 	
-	if delta < 0:
-		delta = delta + 60000
-		
-	parseSmartNetProtocolLine.timestamp = timestamp
 	
 	headerDescription = getSmartNetHeaderDescription(headerID, headerType, headerFunction, headerFlag)
 	bodyDescription   = getSmartNetBodyDescription  (headerType, headerFunction, headerFlag, body)
@@ -336,7 +329,6 @@ def parseSmartNetProtocolLine(line, t):
 	
 #init static var
 parseSmartNetProtocolLine.i         = 0
-parseSmartNetProtocolLine.timestamp = 0
 
 def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
