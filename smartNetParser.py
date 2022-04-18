@@ -328,7 +328,7 @@ def parseSmartNetProtocolLine(line, t):
 			])
 	
 #init static var
-parseSmartNetProtocolLine.i         = 0
+parseSmartNetProtocolLine.i = 0
 
 def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
