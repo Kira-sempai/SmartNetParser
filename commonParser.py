@@ -22,6 +22,17 @@ def getHeaderLen(messageType):
 def getBodyLenFromString(bodySizeStr):
 	return int(bodySizeStr, 16) * 2
 
+def computeDeltaT(timestamp):
+	delta = timestamp - computeDeltaT.timestamp
+	
+	if delta < 0:
+		delta = delta + 60000
+		
+	computeDeltaT.timestamp = timestamp
+	return delta
+	
+#init static var
+computeDeltaT.timestamp = 0
 
 def parseCANUSBLineCommon(line):
 	messageType, line = cutFromLine(line, 1)
@@ -38,10 +49,13 @@ def parseCANUSBLineCommon(line):
 	else:
 		timestamp = 0
 		
+	deltaT = computeDeltaT(timestamp)
+	
 	return {
 		'messageType' : messageType,
 		'header'      : header,
 		'body'        : body,
 		'timestamp'   : timestamp,
+		'deltaT'      : deltaT,
 	}
 	
