@@ -271,16 +271,29 @@ def parseTitleParameterRead(value, headerFlag):
 			parseTitleParameterRead.title  = []
 			parseTitleParameterRead.length = length
 			
-		return f'len={length} crc={crc16}'
+		return f'len={length:>2} crc={crc16}'
 		
-	parseTitleParameterRead.title.extend(value[1:])
+	parseTitleParameterRead.title.append({
+		'pos':pos,
+		'value':value[1:]
+		})
+	
 	hexStringPart = ''.join(value[1:])
 	
-	if len(parseTitleParameterRead.title) >= parseTitleParameterRead.length:
-		title = hexArrayToString(parseTitleParameterRead.title)
-		return f'{hexStringPart} = {title}'
-	else:
-		return hexStringPart
+	length = 0
+	for t in parseTitleParameterRead.title:
+		length += len(t['value'])
+		if length >= parseTitleParameterRead.length:
+			text = [None] * parseTitleParameterRead.length
+			for t in parseTitleParameterRead.title:
+				i = 0
+				for c in t['value']:
+					text[t['pos'] - 1 + i] = c
+					i += 1
+			title = hexArrayToString(text)
+			return f'{pos:>2}: {hexStringPart} = {title}'
+	
+	return f'{pos:>2}: {hexStringPart}'
 
 parseTitleParameterRead.title  = []
 parseTitleParameterRead.length = 0
@@ -353,6 +366,9 @@ def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 	
 def parseSmartNetProtocolLine(line, t):
 	parseSmartNetProtocolLine.i += 1
+	
+	if len(line) < 4:
+		return
 	
 	try:
 		pLine = parseCANUSBLineCommon(line)
