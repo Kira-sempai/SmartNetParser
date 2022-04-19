@@ -80,6 +80,7 @@ ProgramType = {
 }
 
 ProgramParameter = {
+	 0: 'ID',
 	 1: 'INPUT',
 	 2: 'OUTPUT',
 	 3: 'TITLE',
@@ -87,6 +88,8 @@ ProgramParameter = {
 	 5: 'OUTPUT_MAPPING',
 	 6: 'SCHEME',
 	 7: 'TRAINING_ENABLED',
+	 8: 'MANUAL_MODE_ENABLED',
+	 9: 'OUTPUT_MANUAL_STATE',
 }
 
 RoomDeviceParameter = {
