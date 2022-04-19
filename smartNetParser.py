@@ -4,6 +4,8 @@ except ImportError:
 	print('PrettyTable module not installed\nSee https://pypi.org/project/prettytable/\n')
 	exit()
 
+import json
+import datetime
 from commonParser import parseCANUSBLineCommon
 import constantsSmartNet
 
@@ -73,12 +75,37 @@ def getSmartNetHeaderDescription(id, programTypeId, functionId, flag):
 	return '{} {}({:3})->{}'.format(flagName[:3], programTypeName, id, functionName)
 
 
+def parseMappingValue(value):
+	host = int(value[0], 16)
+	
+	channelIdAndType = int(value[1], 16)
+	
+	channelId = channelIdAndType & 0x1F
+	channelType = channelIdAndType >> 5
+	
+	typeDict = {
+		0: 'SENSOR_LOCAL',
+		1: 'RELAY_LOCAL',
+		2: 'SENSOR',
+		3: 'RELAY',
+		4: 'INPUT',
+		5: 'OUTPUT',
+		6: 'RESERVED',
+		7: 'UNDEFINED',
+	}
+	
+	return {
+		'host': host,
+		'id'  : channelId,
+		'type': typeDict[channelType]
+	}
+
 def smartNetControllerIAmHereDescription(flag, body):
 	if flag == 0:
 		return ''
 	
 	try:
-		controllerTypeId  = int('{}'.format(body[0]), 16)
+		controllerTypeId  = int(body[0], 16)
 	except:
 		return ''
 	
@@ -96,40 +123,32 @@ def smartNetControllerIAmHereDescription(flag, body):
 		type = 'UNK'
 	
 	return 'Ctrl Type: ' + type
+
+def smartNetControllerGetRelayMappingDescription(flag, body):
+	channelId = int(body[0], 16)
+	
+	if flag == 0:
+		return f'id = {channelId}'
+	
+	mapping = parseMappingValue(body[1:])
+	
+	mappingStr = json.dumps(parseMappingValue(body[1:]))
+	return f'id = {channelId}: {mappingStr}'
 	
 def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	if flag == 0:
 		return ''
 	
-	host = int(body[0], 16)
+	mapping = parseMappingValue(body[:2])
 	
-	channelIdAndType = int(body[1], 16)
-	
-	channelId = channelIdAndType & 0x1F
-	channelType = channelIdAndType >> 5
-	
-	
-	typeDict = {
-		0: 'CHANNEL_SENSOR_LOCAL',
-		1: 'CHANNEL_RELAY_LOCAL',
-		2: 'CHANNEL_SENSOR',
-		3: 'CHANNEL_RELAY',
-		4: 'CHANNEL_INPUT',
-		5: 'CHANNEL_OUTPUT',
-		6: 'CHANNEL_RESERVED',
-		7: 'CHANNEL_UNDEFINED',
-	}
-	
-	channelTypeName = typeDict[channelType]
-	
-	if channelTypeName == 'CHANNEL_OUTPUT':
+	if   mapping['channelType'] == 'CHANNEL_OUTPUT':
 		value = int(body[2], 16)
-	elif channelTypeName == 'CHANNEL_SENSOR':
-		value = int('{}{}'.format(body[2], body[3]), 16)/10.0
+	elif mapping['channelType'] == 'CHANNEL_SENSOR':
+		value = int(body[2] + body[3], 16)/10.0
 	else:
 		value = ''
 	
-	return 'host={:2} channelId={:2} type={:14} value={:5}'.format(host, channelId, channelTypeName, value)
+	return 'host={:2} channelId={:2} type={:14} value={:5}'.format(mapping['host'], mapping['channelId'], mapping['channelTypeName'], value)
 
 def smartNetControllerJournalBodyDescription(flag, body):
 	
@@ -229,19 +248,65 @@ def getSmartNetControllerBodyDescription(headerFunction, headerFlag, body):
 		'JOURNAL'          : smartNetControllerJournalBodyDescription,
 		'INIT_LOG_TRANSMIT': smartNetControllerInitLogTransmitDescription,
 		'GET_LOG_PART'     : smartNetControllerGetLogPartDescription,
+		'GET_RELAY_MAPPING': smartNetControllerGetRelayMappingDescription,
 	}
 
 	if function in functionParserDict:
 		return functionParserDict[function](headerFlag, body)
 	
 	return ''
+
+def hexArrayToString(array):
+	hexString = ''.join(array)
+	byte_array = bytearray.fromhex(hexString)
+	return byte_array.decode().strip('\0')
+
+def parseTitleParameterRead(value, headerFlag):
+	pos = int(value[0], 16)
+	if pos == 0:
+		length = int(value[1], 16)
+		crc16  = value[2]+value[3]
+		
+		if headerFlag == 1:
+			parseTitleParameterRead.title  = []
+			parseTitleParameterRead.length = length
+			
+		return f'len={length} crc={crc16}'
+		
+	parseTitleParameterRead.title.extend(value[1:])
+	hexStringPart = ''.join(value[1:])
+	
+	if len(parseTitleParameterRead.title) >= parseTitleParameterRead.length:
+		title = hexArrayToString(parseTitleParameterRead.title)
+		return f'{hexStringPart} = {title}'
+	else:
+		return hexStringPart
+
+parseTitleParameterRead.title  = []
+parseTitleParameterRead.length = 0
+	
+def parseRemoteControlProgramGetParameterValue(parameter, headerFlag, value):
+	if (parameter == 'OUTPUT_MAPPING' or
+	    parameter == 'INPUT_MAPPING'):
+		channelId = int(value[0], 16)
+		if headerFlag == 0:
+			return f'{channelId}'
+			
+		mappingStr = json.dumps(parseMappingValue(value[1:]))
+		return f'{channelId}={mappingStr}'
+	
+	if parameter == 'TITLE':
+		return parseTitleParameterRead(value, headerFlag)
+		
+	return ''
 	
 	
+
 def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	bodyLen = len(body)
 
-	programTypeId = int('{}'.format(body[0]), 16)
-	parameterId   = int('{}'.format(body[1]), 16)
+	programTypeId = int(body[0], 16)
+	parameterId   = int(body[1], 16)
 	
 	if programTypeId not in constantsSmartNet.ProgramType:
 		return ''
@@ -254,10 +319,13 @@ def smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body):
 	else:
 		parameter = constantsSmartNet.ParameterDict[programType][parameterId]
 	
-	parameterStr = '{}.{}:'.format(programType, parameter)
+	parameterStr = f'{programType}.{parameter}:'
 	
-	for i in range(2, bodyLen):
-		parameterStr + ' {}'.format(body[i])
+	if programType == 'PROGRAM':
+		parameterStr += parseRemoteControlProgramGetParameterValue(parameter, headerFlag, body[2:])
+	else:
+		for i in range(2, bodyLen):
+			parameterStr += ' ' + body[i]
 		
 	return parameterStr
 	
