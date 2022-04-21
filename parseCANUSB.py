@@ -13,15 +13,8 @@ def initParser():
 		)
 	
 	parser.add_argument('File', metavar='MyFile', nargs='?', help='file with CAN log')
-	parser.add_argument(
-					'-p',
-					'--protocol',
-					metavar ='Protocol',
-					nargs   ='?', 
-					choices = ['smartnet', 'kse'],
-					default ='smartnet',
-					help = 'Select protocol to parse'
-					)
+	parser.add_argument('-p', '--protocol', metavar ='Protocol', nargs ='?', choices = ['smartnet', 'kse'], default ='smartnet', help = 'Select protocol to parse')
+	parser.add_argument('-i', '--id', metavar ='busId', type = int, nargs ='?', default = -1, help = 'Select bus Id to parse')
 
 	return parser
 	
@@ -40,7 +33,8 @@ def main():
 	if arg.protocol == 'smartnet':
 		parseSmartNetProtocol(content, OutputFile)
 	else:
-		parseKseProtocol(content, OutputFile)
+		busId = arg.id
+		parseKseProtocol(content, OutputFile, busId)
 	
 	
 	print('Done')
