@@ -283,13 +283,17 @@ def parseTitleParameterRead(value, headerFlag):
 	length = 0
 	for t in parseTitleParameterRead.title:
 		length += len(t['value'])
-		if length >= parseTitleParameterRead.length:
+		if parseTitleParameterRead.length > 0 and length >= parseTitleParameterRead.length:
 			text = [None] * parseTitleParameterRead.length
 			for t in parseTitleParameterRead.title:
 				i = 0
 				for c in t['value']:
 					text[t['pos'] - 1 + i] = c
 					i += 1
+					
+			parseTitleParameterRead.title  = []
+			parseTitleParameterRead.length = 0
+			
 			title = hexArrayToString(text)
 			return f'{pos:>2}: {hexStringPart} = {title}'
 	
