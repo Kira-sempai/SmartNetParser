@@ -141,14 +141,14 @@ def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	
 	mapping = parseMappingValue(body[:2])
 	
-	if   mapping['channelType'] == 'CHANNEL_OUTPUT':
+	if   mapping['type'] == 'OUTPUT':
 		value = int(body[2], 16)
-	elif mapping['channelType'] == 'CHANNEL_SENSOR':
+	elif mapping['type'] == 'SENSOR':
 		value = int(body[2] + body[3], 16)/10.0
 	else:
 		value = ''
 	
-	return 'host={:2} channelId={:2} type={:14} value={:5}'.format(mapping['host'], mapping['channelId'], mapping['channelTypeName'], value)
+	return 'host={:2} channelId={:2} type={:7} value={:5}'.format(mapping['host'], mapping['id'], mapping['type'], value)
 
 def smartNetControllerJournalBodyDescription(flag, body):
 	
@@ -422,7 +422,11 @@ def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
 
 	for line in content:
-		parseSmartNetProtocolLine(line, t)
+		try:
+			parseSmartNetProtocolLine(line, t)
+		except:
+			print(f'Bad Line {line}');
+			exit(1)
 	
 	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 	
