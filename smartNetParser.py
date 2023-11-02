@@ -9,6 +9,19 @@ import datetime
 from commonParser import parseCANUSBLineCommon
 import constantsSmartNet
 
+
+
+def bytesToTemp(lsb, msb):
+	str = msb + lsb
+	
+	if str == '8003': return 'UNDEF'
+	if str == '8001': return 'SHORT'
+	if str == '8002': return 'OPEN'
+	
+	value = int(str, 16)/10.0
+	
+	return value
+
 def prepareSmartNetTable():
 	t = PrettyTable([	'T',
 						'dT',
@@ -144,7 +157,7 @@ def smartNetControllerGetOutputValueBodyDescription(flag, body):
 	if   mapping['type'] == 'OUTPUT':
 		value = int(body[2], 16)
 	elif mapping['type'] == 'SENSOR':
-		value = int(body[2] + body[3], 16)/10.0
+		value = bytesToTemp(body[3],body[2])
 	else:
 		value = ''
 	
@@ -267,7 +280,7 @@ def parseTitleParameterRead(value, headerFlag):
 		length = int(value[1], 16)
 		crc16  = value[2]+value[3]
 		
-		if headerFlag == 1:
+		if constantsSmartNet.smartNetHeaderFlag[headerFlag] == 'Response':
 			parseTitleParameterRead.title  = []
 			parseTitleParameterRead.length = length
 			
@@ -306,7 +319,7 @@ def parseRemoteControlProgramGetParameterValue(parameter, headerFlag, value):
 	if (parameter == 'OUTPUT_MAPPING' or
 	    parameter == 'INPUT_MAPPING'):
 		channelId = int(value[0], 16)
-		if headerFlag == 0:
+		if constantsSmartNet.smartNetHeaderFlag[headerFlag] == 'Request':
 			return f'{channelId}'
 			
 		mappingStr = json.dumps(parseMappingValue(value[1:]))
@@ -355,7 +368,32 @@ def getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body):
 	if function == 'GET_PARAMETER_VALUE' : return smartNetRemoteControlGetParameterValueBodyDescription(headerFlag, body)
 	
 	return ''
+
+def getSmartNetTemperatureSourceBodyDescription(headerFunction, headerFlag, body):
+	if headerFunction not in constantsSmartNet.TemperatureSourceFunction:
+		return ''
 	
+	function = constantsSmartNet.TemperatureSourceFunction[headerFunction]
+	
+	if function == 'REQUEST_TEMPERATURE' :
+		setpoint  = bytesToTemp(body[0], body[1])
+		programId = int(body[2], 16)
+	
+		str = 'Treq={:5} Prg={:2}'.format(setpoint, programId)
+	
+		return str
+	
+	if function == 'GET_TEMPERATURE' :
+		if constantsSmartNet.smartNetHeaderFlag[headerFlag] == 'Request':
+			return ''
+		temp      = bytesToTemp(body[0], body[1])
+		setpoint  = bytesToTemp(body[2], body[3])
+	
+		str = 'temp={:5} Treq={:5}'.format(temp, setpoint)
+	
+		return str
+	
+	return ''
 	
 def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 	if headerType not in constantsSmartNet.ProgramType:
@@ -363,8 +401,9 @@ def getSmartNetBodyDescription(headerType, headerFunction, headerFlag, body):
 
 	programType = constantsSmartNet.ProgramType[headerType]
 	
-	if programType == 'CONTROLLER'    : return getSmartNetControllerBodyDescription   (headerFunction, headerFlag, body)
-	if programType == 'REMOTE_CONTROL': return getSmartNetRemoteControlBodyDescription(headerFunction, headerFlag, body)
+	if programType == 'CONTROLLER'        : return getSmartNetControllerBodyDescription       (headerFunction, headerFlag, body)
+	if programType == 'REMOTE_CONTROL'    : return getSmartNetRemoteControlBodyDescription    (headerFunction, headerFlag, body)
+	if programType == 'TEMPERATURE_SOURCE': return getSmartNetTemperatureSourceBodyDescription(headerFunction, headerFlag, body)
 	
 	return ''
 	
@@ -420,13 +459,15 @@ parseSmartNetProtocolLine.i = 0
 
 def parseSmartNetProtocol(content, outputFile):
 	t = prepareSmartNetTable()
-
+	errorCnt = 0
 	for line in content:
 		try:
 			parseSmartNetProtocolLine(line, t)
 		except:
-			print(f'Bad Line {line}');
-			exit(1)
+			print(f'Bad Line {parseSmartNetProtocolLine.i}: {line}')
+			errorCnt += 1
+			if errorCnt > 20:
+				exit(1)
 	
 	with open(outputFile, 'w') as Output: Output.write(t.get_string())
 	
