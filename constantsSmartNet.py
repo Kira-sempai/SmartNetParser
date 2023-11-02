@@ -165,12 +165,46 @@ ControllerParameter = {
 	30:	'SENSOR_CALIBRATION',          
 	31:	'DISCRETTE_OUTPUT_SIGNAL_FORM',
 	32:	'ANALOG_OUTPUT_MAX_Y',
+	
+	33: 'SENSOR_TYPE',
+	34: 'SENSOR_INFO',
+
+	35: 'SUMMER_TIME_SWITCH',
+	36: 'TIME_MASTER',
+
+	37: 'ADAPTER_TYPE'  ,
+	38: 'ADAPTER_SPEED' ,
+	39: 'ADAPTER_PARITY',
+
+	40: 'CONTROLLER_ID',
+
+	41: 'ADAPTER_STOP_BIT_NUM',
+
+	42: 'RELAY_TEST_ENABLE',
+	
+	43: 'OUTPUT_MANUAL_VALUE',
 }
 
+
+HeatingCircuitParameter = {
+	 1: 'FROST_PROTECTION_TEMPERATURE',
+	 2: 'VALVE_RUNING_TIME',
+	 3: 'VALVE_OPEN_PROPORTIONAL_BAND',
+	 4: 'VALVE_CLOSE_PROPORTIONAL_BAND',
+	 5: 'VALVE_BLOCK',
+	 6: 'PUMP_MODE',
+	 7: 'PUMP_OFF_OUTDOOR_TEMPERATURE',
+	 8: 'ANALOG_CICRULATION_PUMP_STATE',
+	 9: 'ANALOG_HEATCHANGE_PUMP_STATE',
+	10: 'VALVE_POSITION',
+}
+
+
 ParameterDict = {
-	'PROGRAM'    : ProgramParameter,
-	'ROOM_DEVICE': RoomDeviceParameter,
-	'CONTROLLER' : ControllerParameter
+	'PROGRAM'        : ProgramParameter,
+	'ROOM_DEVICE'    : RoomDeviceParameter,
+	'CONTROLLER'     : ControllerParameter,
+	'HEATING_CIRCUIT': HeatingCircuitParameter,
 }
 
 
